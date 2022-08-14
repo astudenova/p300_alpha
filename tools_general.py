@@ -109,7 +109,7 @@ def list_from_many(ids, dir_read, file_ext, type_read='json'):
     """
     Load several files containing participants data and convert into array
 
-    :param list ids: ids of participants for whom loading is needed
+    :param numpy.ndarray ids: ids of participants for whom loading is needed
     :param str dir_read: directory with files
     :param str file_ext: the appendix of the file, for instance, for subj000_erp, _erp is an appendix
     :param str type_read: either 'json' or 'pickle', type of file the derivatives are stored in

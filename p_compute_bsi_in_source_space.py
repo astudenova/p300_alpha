@@ -6,14 +6,14 @@ from tools_general import load_json, save_pickle, load_pickle
 from tools_lifedataset import read_rest, create_raw_for_source_reconstruction
 from tools_signal import bsi, create_noise_cov
 
-dir_save = '/data/p_02581/save'
+dir_save = load_json('dirs_files',os.getcwd())['dir_save']
 
 ids = load_json('ids', os.getcwd())
 alpha_peaks = load_pickle('alpha_peaks', os.getcwd())
 markers_rest = load_json('markers_rest', os.getcwd())
 
 # folders for source reconstruction
-subjects_dir = '/data/hu_studenova/mne_data/MNE-fsaverage-data'
+subjects_dir = load_json('dirs_files',os.getcwd())['subjects_dir']
 subject = 'fsaverage'
 _oct = '6'
 src_dir = op.join(subjects_dir, subject, 'bem', subject + '-oct' + _oct + '-src.fif')

@@ -19,7 +19,7 @@ from pingouin import partial_corr
 import os.path as op
 
 dir_codes = os.getcwd()
-dir_derr = '/data/p_02581/paper/'
+dir_derr = load_json('dirs_files',os.getcwd())['dir_derr']
 ids_all = load_json('ids', dir_codes)
 erp_times = np.array(load_json('erp_times', dir_codes))
 raw_info = load_pickle('raw_info', dir_codes)
@@ -28,13 +28,13 @@ meds_ids, _ = read_medications(ids_all)
 reject_ids = list(set(reject_spec + list(meds_ids)))
 id_mask = np.intersect1d(ids_all, reject_ids, return_indices=True)[1]
 ids = np.delete(ids_all, id_mask)
-n_sen = 31
+n_ch = 31
 age, age_ids = read_age(ids)
 gender, _ = read_gender(ids)
 
 
 # for source reconstruction
-subjects_dir = '/data/hu_studenova/mne_data/MNE-fsaverage-data'
+subjects_dir = load_json('dirs_files',os.getcwd())['subjects_dir']
 subject = 'fsaverage'
 
 erp_times_dec = load_json_to_numpy('erp_times_dec', dir_codes)
@@ -73,12 +73,12 @@ corr_t = load_json_to_numpy('corr_t', dir_derr)[full_mask]
 corr_s = load_json_to_numpy('corr_s', dir_derr)[full_mask]
 pval_t_s = []
 t_stat = []
-for i in range(n_sen):
+for i in range(n_ch):
     ttestval = ttest_rel(corr_t[:, i], corr_s[:, i])
     t_stat.append(ttestval[0])
     pval_t_s.append(ttestval[1])
 
-thr_sen = t.ppf(q=1 - 10 ** (-4) / n_sen / 2, df=2230 - 1)
+thr_sen = t.ppf(q=1 - 10 ** (-4) / n_ch / 2, df=2230 - 1)
 topoplot_with_colorbar(t_stat, raw_info, cmap=parula_map(), mask=np.abs(t_stat) > thr_sen)
 
 # ---------------------------------------------------------------
@@ -95,17 +95,17 @@ for i_subj, subj in enumerate(ids):
         print('Setting the peak latency to 0.5.')
 
 # build topographies from avg peak values
-erp_topo_avg = np.zeros((len(ids), n_sen))
-env_topo_avg = np.zeros((len(ids), n_sen))
-noerp_topo_avg = np.zeros((len(ids), n_sen))
-noenv_topo_avg = np.zeros((len(ids), n_sen))
+erp_topo_avg = np.zeros((len(ids), n_ch))
+env_topo_avg = np.zeros((len(ids), n_ch))
+noerp_topo_avg = np.zeros((len(ids), n_ch))
+noenv_topo_avg = np.zeros((len(ids), n_ch))
 for i_subj in range(len(ids)):
     pk_sample_erp = np.argmin(np.abs(erp_times - erp_peaks_avg[i_subj]))
     env_poststim = np.mean(avg_env_t[i_subj, :, pk_sample_erp - 50:pk_sample_erp + 50], axis=1)
     noenv_poststim = np.mean(avg_env_s[i_subj, :, pk_sample_erp - 50:pk_sample_erp + 50], axis=1)
-    erp_topo_avg[i_subj] = avg_erp_t[i_subj, :n_sen, pk_sample_erp]
+    erp_topo_avg[i_subj] = avg_erp_t[i_subj, :n_ch, pk_sample_erp]
     env_topo_avg[i_subj] = env_poststim
-    noerp_topo_avg[i_subj] = avg_erp_s[i_subj, :n_sen, pk_sample_erp]
+    noerp_topo_avg[i_subj] = avg_erp_s[i_subj, :n_ch, pk_sample_erp]
     noenv_topo_avg[i_subj] = noenv_poststim
 
 topoplot_with_colorbar(np.mean(erp_topo_avg - noerp_topo_avg, axis=0),
@@ -124,8 +124,8 @@ topoplot_with_colorbar(bsi_mean, raw_info, cmap=parula_map())
 # -----------------------------------------------------------------
 # FIGURE 3b
 # -----------------------------------------------------------------
-bsi_mode = np.zeros((n_sen,))
-for ch in range(n_sen):
+bsi_mode = np.zeros((n_ch,))
+for ch in range(n_ch):
     n, bins, _ = plt.hist(bsi_all[:, ch], bins=50)
     mode_index = np.argmax(n)
     bsi_mode[ch] = (bins[mode_index] + bins[mode_index + 1]) / 2
@@ -142,14 +142,14 @@ plt.title('BSI at Pz')
 # -----------------------------------------------------------------
 
 # over the cortex
-corr_bsi_corr_t = np.zeros((n_sen,))
-pval_bsi_corr_t = np.zeros((n_sen,))
-for ch in range(n_sen):
+corr_bsi_corr_t = np.zeros((n_ch,))
+pval_bsi_corr_t = np.zeros((n_ch,))
+for ch in range(n_ch):
     pearson_tmp = pearsonr(bsi_all[:, ch], corr_t[:, ch])
     corr_bsi_corr_t[ch] = pearson_tmp[0]
     pval_bsi_corr_t[ch] = pearson_tmp[1]
 
-topoplot_with_colorbar(corr_bsi_corr_t, raw_info=raw_info, cmap=parula_map(), mask=pval_bsi_corr_t < 0.0001 / n_sen)
+topoplot_with_colorbar(corr_bsi_corr_t, raw_info=raw_info, cmap=parula_map(), mask=pval_bsi_corr_t < 0.0001 / n_ch)
 
 # -----------------------------------------------------------------
 # FIGURE 4a
@@ -202,8 +202,8 @@ for patch in patches:
 # -----------------------------------------------------------------
 sen_sorted = load_json('sen_sorted_idx', dir_codes)
 # make bins for each channel
-idx_bin = np.zeros((n_sen, 5, len(ids)), dtype=bool)
-for ch in range(n_sen):
+idx_bin = np.zeros((n_ch, 5, len(ids)), dtype=bool)
+for ch in range(n_ch):
     bsi_bins = np.percentile(np.sort(bsi_all[:, ch]), np.arange(0, 100, 20))
     # create binning idx
     idx_bin[ch, 0] = bsi_all[:, ch] < bsi_bins[1]
@@ -212,18 +212,18 @@ for ch in range(n_sen):
         idx_bin[ch, i] = np.multiply(bsi_all[:, ch] > bsi_bins[i], bsi_all[:, ch] < bsi_bins[i + 1])
 
 # arrange P300 according to bins
-ampl_full_t = np.zeros((2, len(ids), n_sen, len(erp_times)))
+ampl_full_t = np.zeros((2, len(ids), n_ch, len(erp_times)))
 idx_bin1 = idx_bin[:, 0]
 idx_bin5 = idx_bin[:, 4]
 for i_subj in range(len(ids)):
     subj_mask_bin1 = idx_bin1[:, i_subj]
     subj_mask_bin5 = idx_bin5[:, i_subj]
-    ampl_full_t[0, i_subj] = np.multiply(avg_erp_t[i_subj, :n_sen].T, subj_mask_bin1).T
-    ampl_full_t[1, i_subj] = np.multiply(avg_erp_t[i_subj, :n_sen].T, subj_mask_bin5).T
+    ampl_full_t[0, i_subj] = np.multiply(avg_erp_t[i_subj, :n_ch].T, subj_mask_bin1).T
+    ampl_full_t[1, i_subj] = np.multiply(avg_erp_t[i_subj, :n_ch].T, subj_mask_bin5).T
 
-ampl_t = np.zeros((2, np.sum(idx_bin[0,0]), n_sen, len(erp_times)))
+ampl_t = np.zeros((2, np.sum(idx_bin[0,0]), n_ch, len(erp_times)))
 for i in range(2):
-    for i_ch in range(n_sen):
+    for i_ch in range(n_ch):
         cntr_t = 0
         for i_subj in range(len(ids)):
             if np.sum(ampl_full_t[i, i_subj, i_ch] == 0) != len(erp_times):
@@ -253,7 +253,7 @@ plt.imshow(F_obs[:, sen_sorted].T, aspect=15, cmap=parula_map())
 plt.imshow(F_obs_sig[:, sen_sorted].T, aspect=15, cmap=parula_map())
 
 t500 = np.argmin(np.abs(erp_times - .5))
-ch_mask = np.zeros((n_sen,), dtype=bool)
+ch_mask = np.zeros((n_ch,), dtype=bool)
 ch_mask[ch_inds] = True
 topoplot_with_colorbar(F_obs[t500], raw_info=raw_info, cmap=parula_map(), mask=ch_mask, vmin=np.min(F_obs),
                        vmax=np.max(F_obs))
@@ -439,7 +439,7 @@ tmp.save_image('bsi_corr_full_lh_med.png')
 # ----------------------------------------------------
 # FIGURE 8b
 # ----------------------------------------------------
-lda_filter, lda_pattern = lda_(avg_erp_t[:, :n_sen], avg_erp_s[:, :n_sen], [0.3, 0.7], erp_times)
+lda_filter, lda_pattern = lda_(avg_erp_t[:, :n_ch], avg_erp_s[:, :n_ch], [0.3, 0.7], erp_times)
 save_pickle('lda_filter', dir_derr, lda_filter)
 save_pickle('lda_pattern', dir_derr, lda_pattern)
 topoplot_with_colorbar(lda_pattern, raw_info, cmap=parula_map())
@@ -447,9 +447,9 @@ topoplot_with_colorbar(lda_pattern, raw_info, cmap=parula_map())
 lda_erp_peak_lat = np.zeros((len(ids),))
 lda_erp_peak_amp = np.zeros((len(ids),))
 for i_subj, subj in enumerate(ids):
-    erp_t = avg_erp_t[i_subj][:n_sen][np.newaxis, :, :]
+    erp_t = avg_erp_t[i_subj][:n_ch][np.newaxis, :, :]
 
-    erp_t_spat = apply_spatial_filter(erp_t, lda_filter, lda_pattern, n_sen, n_epoch=1).reshape((-1))
+    erp_t_spat = apply_spatial_filter(erp_t, lda_filter, lda_pattern, n_ch, n_epoch=1).reshape((-1))
     erp_t_peak = pk_latencies_amplitudes(erp_t_spat, np.array([.2, 1]), erp_times, direction='pos')[0][1:]
 
     lda_erp_peak_lat[i_subj] = erp_t_peak[0]
@@ -551,7 +551,7 @@ annotated_heatmap(var_to_corr[:4], var_to_corr[5:], np.round(corr_par_pval[:4, 5
 fig, ax = plt.subplots(4, 8, sharex=True, sharey=True)
 grand_avg_erp_t = np.mean(avg_erp_t, axis=0)
 ax = ax.flatten()
-for i in range(n_sen):
+for i in range(n_ch):
     ax[i].plot(erp_times, grand_avg_erp_t[i], c='darkblue', linewidth=3)
     ax[i].set_title(raw_info.ch_names[i], fontsize=6)
     ax[i].spines['right'].set_visible(False)
@@ -567,7 +567,7 @@ ax[0].set_xlim([-0.2, 1.1])
 grand_avg_env_t = np.mean(avg_env_t, axis=0)
 fig, ax = plt.subplots(4, 8, sharex=True, sharey=True)
 ax = ax.flatten()
-for i in range(n_sen):
+for i in range(n_ch):
     ax[i].plot(erp_times, grand_avg_env_t[i], c='orange', linewidth=3)
     ax[i].set_title(raw_info.ch_names[i], fontsize=6)
     ax[i].spines['right'].set_visible(False)
@@ -583,7 +583,7 @@ ax[0].set_xlim([-0.2, 1.1])
 
 topoplot_with_colorbar(bsi_mode, raw_info, cmap=parula_map(), vmin=-1, vmax=1)
 # BSI as mode
-stc_bsi, _ = list_from_many(ids, '/data/p_02581/fitted_dipoles_eL_bsi', '_bsi', type='pickle')
+stc_bsi, _ = list_from_many(ids, op.join(dir_derr, 'eL_bsi'), '_bsi', 'pickle')
 bsi_mode = np.zeros((n_source,))
 for v in range(n_source):
     n, bins, _ = plt.hist(stc_bsi[:, v], bins=50)

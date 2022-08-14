@@ -32,14 +32,14 @@ def peak_in_spectrum(Pxx, f):
     return alpha_peak
 
 
-def filtfilt_with_padding(X, b_coeff, a_coeff, win_padding):
+def filtfilt_with_padding(X, b_coeff, a_coeff, padlen):
     """
     Filters signal using manual padding with mirroring
 
     :param numpy.ndarray X: signal to filter (dimensions - 1D)
     :param numpy.ndarray b_coeff: filter coefficients (dimensions - 1D)
     :param numpy.ndarray a_coeff: filter coefficients (dimensions - 1D)
-    :param int win_padding: the desirable window for padding
+    :param int padlen: the desirable window for padding
     :returns: X_filt (numpy.ndarray, 1D) - filtered signal
     """
 
@@ -49,9 +49,9 @@ def filtfilt_with_padding(X, b_coeff, a_coeff, win_padding):
     if X.shape[0] == 1:
         X = X.reshape((-1))
 
-    X_pad = np.hstack((np.flip(X)[-win_padding:], X, np.flip(X[-win_padding:])))
+    X_pad = np.hstack((np.flip(X)[-padlen:], X, np.flip(X[-padlen:])))
     X_padded = filtfilt(b_coeff, a_coeff, X_pad, padtype=None)
-    X_filt = X_padded[win_padding:-win_padding]
+    X_filt = X_padded[padlen:-padlen]
 
     return X_filt
 
@@ -95,67 +95,83 @@ def bsi_pearson(X_ampl, X_lowpass, n_bins=20):
     return bsi, V_alpha, V_bs
 
 
-def bsi(X, fs, win_padding=50000, alpha_peak=None):
+def bsi(X, fs, padlen=50000, alpha_peak=None):
     """
     Precomputes signals for further the baseline-shift index calculation with bsi_pearson
 
     :param numpy.ndarray X: signal for which computation will be carries out (dimensions - 1D)
     :param float fs: sampling frequency
-    :param int win_padding: number of samples that will be used for padding the signal when filtering, default = 50000 samples
+    :param int padlen: number of samples that will be used for padding the signal when filtering, default = 50000 samples
     :param int alpha_peak: peak frequency of the band of interest if precomputed before, default = None
     :returns: bsi (float) - the baseline-shift index
     """
 
-    from scipy.signal import welch, butter, hilbert
+    from scipy.signal import welch, hilbert
 
     # if alpha_peak is not precomputed, compute it here
-    if alpha_peak == None:
+    if alpha_peak is None:
         f, Pxx = welch(X, fs=fs, nperseg=10 * fs, noverlap=5 * fs, nfft=10 * fs, detrend=False)
         alpha_peak = peak_in_spectrum(Pxx, f)
 
-    adj_band = np.array([alpha_peak - 2, alpha_peak + 2])
-    b10, a10 = butter(N=2, Wn=adj_band / fs * 2, btype='bandpass')
-    lf = 3
-    b_lf, a_lf = butter(N=4, Wn=lf / fs * 2, btype='lowpass')
-    X_passband = filtfilt_with_padding(X, b10, a10, win_padding)
-    X_lowpass = filtfilt_with_padding(X, b_lf, a_lf, win_padding)
+    X_lowpass = filter_in_low_frequency(X, fs, padlen=padlen, padding_mirror=True)
+    X_passband = filter_in_alpha_band(X, fs, padlen=padlen, alpha_peak=alpha_peak, padding_mirror=True)
     X_ampl = np.abs(hilbert(X_passband))
 
     bsi, _, _ = bsi_pearson(X_ampl, X_lowpass)
 
     return bsi
 
+def filter_in_low_frequency(signal, fs, padlen, padding_mirror=False):
+    """
+    Filters input in low-frequency band at 0-3Hz
 
-def compute_envelope(data, n_epoch, n_sen, fs, alpha_peaks=None, subtract=False):
+    :param numpy.ndarray signal: signal to filter
+    :param float fs: sampling frequency
+    :param padlen: the length of padded samples
+    :param bool padding_mirror: whether to use mirroring when padding, default=False - using zero padding
+    :return: lowpass (numpy.ndarray) - filtered signal
+    """
+    from scipy.signal import butter, filtfilt
+
+    lf = 3
+    b_lf, a_lf = butter(N=4, Wn=lf / fs * 2, btype='lowpass')
+    if padding_mirror:
+        lowpass = filtfilt_with_padding(signal, b_lf, a_lf, padlen)
+    else:
+        lowpass = filtfilt(b_lf, a_lf, signal, padlen)
+
+    return lowpass
+
+def compute_envelope(data, n_epoch, n_ch, fs, alpha_peaks=None, subtract=False):
     """
     Computes amplitude envelope from epoched data
 
     :param numpy.ndarray epochs: broadband data (dimensions - 3D)
     :param int n_epoch: number of epochs
-    :param int n_sen: number of channels in the data
+    :param int n_ch: number of channels in the data
     :param numpy.ndarray alpha_peaks: peak frequencies for each channel, if None will be computed inside the function (dimensions - 1D)
     :param bool subtract: flag to whether on not subtract average ER from each trial
     :returns: env_epoch (numpy.ndarray, 3D) - amplitude envelope with dimensions epochs x channels x time
     """
     # return epochs of alpha envelope
-    from scipy.signal import filtfilt, welch, butter
-    from tools_external import hilbert_
+    from scipy.signal import welch
+    from harmoni.extratools import hilbert_
 
     # if array is not 3D - return an error
     if len(data.shape) != 3:
         raise ValueError('Input data should be 3D.')
 
-    data, epochs, sensors, times = check_dimensions_3D(data, n_epoch, n_sen)
+    data, epochs, channels, times = check_dimensions_3D(data, n_epoch, n_ch)
 
     env_epoch = np.zeros((data.shape))
 
-    # compute spectrum for each electrode
+    # compute spectrum for each channel
     if alpha_peaks is None:
-        data_cont = np.array([data[:, i, :].reshape((-1)) for i in range(sensors)])
+        data_cont = np.array([data[:, i, :].reshape((-1)) for i in range(channels)])
         f, Pxx = welch(data_cont, fs=fs, nperseg=10 * fs, noverlap=5 * fs, nfft=10 * fs, detrend=False)
-        alpha_peaks = np.array([peak_in_spectrum(Pxx[i_ch], f) for i_ch in range(sensors)])
+        alpha_peaks = np.array([peak_in_spectrum(Pxx[i_ch], f) for i_ch in range(channels)])
     else:
-        if len(alpha_peaks) != sensors:
+        if len(alpha_peaks) != channels:
             raise ValueError('alpha_peaks should contain value for each channel.')
 
     # compute average ER
@@ -169,16 +185,36 @@ def compute_envelope(data, n_epoch, n_sen, fs, alpha_peaks=None, subtract=False)
     else:
         padlen = 50000
 
-    for i_ch in range(sensors):
+    for i_ch in range(channels):
         alpha_peak = alpha_peaks[i_ch]
-        adj_band = np.array([alpha_peak - 2, alpha_peak + 2])
-        b10, a10 = butter(N=2, Wn=adj_band / fs * 2, btype='bandpass')
-        # filter in the alpha band
-        alpha = filtfilt(b10, a10, data[:,i_ch], padlen=padlen, axis=1)
+        alpha = filter_in_alpha_band(data[:,i_ch], fs, padlen, alpha_peak=alpha_peak)
         # extract envelope
         env_epoch[:,i_ch] = np.abs(hilbert_(alpha))
 
     return env_epoch
+
+def filter_in_alpha_band(signal, fs, padlen, alpha_peak=10, padding_mirror=False):
+    """
+    Filters input in alpha band based on peak frequency +/- 2Hz
+
+    :param numpy.ndarray signal: signal to filter
+    :param float fs: sampling frequency
+    :param padlen: the length of padded samples
+    :param float alpha_peak: peak frequency, default=10 Hz
+    :param bool padding_mirror: whether to use mirroring when padding, default=False - using zero padding
+    :return: alpha (numpy.ndarray) - filtered signal
+    """
+    from scipy.signal import butter, filtfilt
+
+    adj_band = np.array([alpha_peak - 2, alpha_peak + 2])
+    b10, a10 = butter(N=2, Wn=adj_band / fs * 2, btype='bandpass')
+    # filter in the alpha band
+    if padding_mirror:
+        alpha = filtfilt_with_padding(signal, b10, a10, padlen)
+    else:
+        alpha = filtfilt(b10, a10, signal, padlen=padlen, axis=1)
+
+    return alpha
 
 
 def project_eog(raw, decim=1, reject_with_threshold=False):
@@ -297,13 +333,13 @@ def lda_(sig, noise, win, time_vec):
 
     The method is based on Blankertz et al., Single-trial analysis and classification of ERP components - a tutorial, NeuroImage, 2011
 
-    :param numpy.ndarray sig: the data that will be treated as signal, time x sensors (dimensions - 2D)
-    :param numpy.ndarray noise: the data that will be treated as noise, time x sensors (dimensions - 2D)
+    :param numpy.ndarray sig: the data that will be treated as signal, time x channels (dimensions - 2D)
+    :param numpy.ndarray noise: the data that will be treated as noise, time x channels (dimensions - 2D)
     :param list win: time window in which signals will be averaged
     :param numpy.ndarray time_vec: time that corresponds to the data (dimensions - 1D)
     :returns:
-        clf_weights (numpy.array, 1D) - weights of the LDA filter, have dimensions (sensors,)
-        clf_pattern(numpy.array, 1D) - spatial pattern that corresponds to LDA filter, have dimensions (sensors,)
+        clf_weights (numpy.array, 1D) - weights of the LDA filter, have dimensions (channels,)
+        clf_pattern(numpy.array, 1D) - spatial pattern that corresponds to LDA filter, have dimensions (channels,)
     """
     from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
@@ -339,7 +375,7 @@ def from_cont_to_epoch(data, n_epoch, n_times):
     if len(data.shape) != 2:
         raise ValueError('Input data should be 2D.')
 
-    (sensors, times) = data.shape
+    (channels, times) = data.shape
     # if data array is time x channels - reshape
     if n_epoch*n_times != times:
         data = data.T
@@ -349,12 +385,12 @@ def from_cont_to_epoch(data, n_epoch, n_times):
     return data_ep
 
 
-def from_epoch_to_cont(data, n_sen, n_epoch, wings=None):
+def from_epoch_to_cont(data, n_ch, n_epoch, wings=None):
     """
     Reshapes epoched data with dimensions epochs x channels x time to continuous data with dimensions channels x time
 
     :param numpy.ndarray data: data to reshape, epochs x channels x time (dimensions - 3D)
-    :param int n_sen: number of channels in the data
+    :param int n_ch: number of channels in the data
     :param int n_epoch: number of epochs
     :param int wings: number of sample to cut from each side to avoid artifacts, default = None
     :returns: data_cont (numpy.ndarray, 3D) - continuous data with dimensions channels x time
@@ -363,28 +399,28 @@ def from_epoch_to_cont(data, n_sen, n_epoch, wings=None):
     if len(data.shape) != 3:
         raise ValueError('Input data should be 3D.')
 
-    data, epochs, sensors, times = check_dimensions_3D(data, n_epoch, n_sen)
+    data, epochs, channels, times = check_dimensions_3D(data, n_epoch, n_ch)
 
     if wings is None:
-        data_cont = np.zeros((sensors, epochs * times))
+        data_cont = np.zeros((channels, epochs * times))
         for i in range(epochs):
-            data_cont[:, i * times:(i + 1) * times] = data[i, :sensors]
+            data_cont[:, i * times:(i + 1) * times] = data[i, :channels]
     else:
-        data_cont = np.zeros((sensors, epochs * (times - 2 * wings)))
+        data_cont = np.zeros((channels, epochs * (times - 2 * wings)))
         for i in range(epochs):
-            data_cont[:, i * (times- 2 * wings):(i + 1) * (times- 2 * wings)] = data[i, :sensors, wings:-wings]
+            data_cont[:, i * (times- 2 * wings):(i + 1) * (times- 2 * wings)] = data[i, :channels, wings:-wings]
 
     return data_cont
 
 
-def apply_spatial_filter(data, spat_filter, spat_pattern, n_sen, n_epoch):
+def apply_spatial_filter(data, spat_filter, spat_pattern, n_ch, n_epoch):
     """
     Applies spatial filter to the data and normalized on spatial pattern
 
     :param numpy.ndarray data: data to filter, epochs x channels x time (dimensions - 3D)
     :param numpy.ndarray spat_filter: a single spatial filter, the length of the vector should be equal number of channels (dimensions - 1D)
     :param numpy.ndarray spat_pattern: a corresponding spatial pattern, the length of the vector should be equal number of channels (dimensions - 1D)
-    :param int n_sen: number of channels in the data
+    :param int n_ch: number of channels in the data
     :param int n_epoch: number of epochs
     :returns: data_spat (numpy.ndarray, 2D) - continuous data with dimensions epochs x time
     """
@@ -392,29 +428,29 @@ def apply_spatial_filter(data, spat_filter, spat_pattern, n_sen, n_epoch):
     if len(data.shape) != 3:
         raise ValueError('Input data should be 3D.')
 
-    data, epochs, sensors, times = check_dimensions_3D(data, n_epoch, n_sen)
+    data, epochs, channels, times = check_dimensions_3D(data, n_epoch, n_ch)
 
-    data_spat = np.array([spat_filter.T @ data[i, :sensors] for i in range(epochs)])
+    data_spat = np.array([spat_filter.T @ data[i, :channels] for i in range(epochs)])
     data_spat = data_spat * np.std(spat_pattern)
 
     return data_spat
 
 
-def check_dimensions_3D(data, n_epoch, n_sen):
+def check_dimensions_3D(data, n_epoch, n_ch):
     """
     Check the dimensions of 3D array
     Should be epochs x channels x time
 
     :param numpy.ndarray data: data to check (dimensions - 3D)
-    :param int n_sen: number of channels in the data
+    :param int n_ch: number of channels in the data
     :param int n_epoch: number of epochs
     :returns:
         data (numpy.ndarray, 2D) - data with dimensions epochs x channels x time;
         epochs (int) - number of epochs;
-        sensors (int) - number of sensors;
+        channels (int) - number of channels;
         times (int) - number of time samples
     """
-    (epochs, sensors, times) = data.shape
+    (epochs, channels, times) = data.shape
 
     # check if first dimension is epochs
     if epochs != n_epoch:
@@ -422,11 +458,11 @@ def check_dimensions_3D(data, n_epoch, n_sen):
         data = np.swapaxes(data, epoch_dim, 0)
         epochs = n_epoch
     # check if second dimension is channels
-    if sensors != n_sen:
-        sen_dim = np.where(np.array(data.shape) == n_sen)[0][0]
+    if channels != n_ch:
+        sen_dim = np.where(np.array(data.shape) == n_ch)[0][0]
         data = np.swapaxes(data, sen_dim, 1)
-        sensors = n_sen
+        channels = n_ch
 
     times = data.shape[2]
 
-    return data, epochs, sensors, times
+    return data, epochs, channels, times

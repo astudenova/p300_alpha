@@ -1,4 +1,8 @@
+import os
+
 import numpy as np
+
+from tools_general import load_json
 
 
 def read_erp(subj, decim=1, notch=False, h_freq=45):
@@ -6,7 +10,6 @@ def read_erp(subj, decim=1, notch=False, h_freq=45):
     Read the data from stimulus based recordings
 
     :param str subj: id of a participant
-    :param str dir_raw: directory with files
     :param int decim: decimation factor, default decim = 1 (no decimation)
     :param bool notch: application of the notch filter around 50 Hz, default = False
     :param int h_freq: frequency of cut-off, default = 45 Hz
@@ -108,19 +111,19 @@ def create_erp_for_source_reconstruction(erp, decim=10):
     if len(erp_data.shape) != 3:
         raise ValueError('Input data should be epoched.')
 
-    (epochs, sensors, times) = erp_data.shape
+    (epochs, channels, times) = erp_data.shape
     # check if first dimension is epochs
     if epochs != len(erp.events):
         epoch_dim = np.where(np.array(erp_data.shape) == len(erp.events))[0][0]
         erp_data = np.swapaxes(erp_data, epoch_dim, 0)
         epochs = len(erp.events)
     # check if second dimension is channels
-    if sensors > times:
+    if channels > times:
         erp_data = np.swapaxes(erp_data, 2, 1)
-        sensors, times = times, sensors
+        channels, times = times, channels
 
     # flatten the data
-    erp_full = from_epoch_to_cont(erp_data, sensors, epochs)
+    erp_full = from_epoch_to_cont(erp_data, channels, epochs)
 
     # create evoked array for further reconstruction
     evoked_erp = mne.EvokedArray(erp_full, erp.info, tmin=0, nave=erp_full.shape[0])
@@ -249,7 +252,7 @@ def read_age(ids):
     """
     import pandas as pd
 
-    age_data = pd.read_excel('/data/p_02581/PV0426_Datajoin_20180823_copy.xlsx',
+    age_data = pd.read_excel(load_json('dirs_files', os.getcwd())['file_age'],
                              engine='openpyxl')
     ids_age_all = age_data['TEILNEHMER_SIC'].to_numpy()
     age_all = age_data['ageEEG'].to_numpy()
@@ -272,7 +275,7 @@ def read_gender(ids):
 
     import pandas as pd
 
-    gender_data = pd.read_excel('/data/p_02581/PV0426_Datajoin_20180823_copy.xlsx',
+    gender_data = pd.read_excel(load_json('dirs_files',os.getcwd())['file_gender'],
                                 engine='openpyxl')
     ids_gender_all = gender_data['TEILNEHMER_SIC'].to_numpy()
     gender_all = gender_data['TEILNEHMER_GESCHLECHTEEG'].to_numpy()
@@ -296,7 +299,7 @@ def read_cerad(ids):
     """
     import pandas as pd
 
-    file = pd.read_excel('/data/pt_02035/LIFE_data/data/PV0426_T00044_NODUP.xlsx', engine='openpyxl')
+    file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_cerad'], engine='openpyxl')
     file = file.fillna(0)  # fills nan values with zeros
 
     # selects columns for Retrieve word list task
@@ -356,7 +359,7 @@ def composite_attention(ids):
     import pandas as pd
 
     # TMT-A
-    file = pd.read_excel('/data/pt_02035/LIFE_data/data/PV0426_T00041_NODUP.xlsx', engine='openpyxl',
+    file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_tmt'], engine='openpyxl',
                          na_values=np.nan)
 
     # extract values and ids from the file
@@ -382,7 +385,7 @@ def composite_attention(ids):
     tmta_time = tmta_time_all[idx2].reshape((-1))  # the smaller, the better
 
     # Stroop neutral
-    file = pd.read_excel('c:/Users/st_al/Documents/life-test/PV0426_T00926_NODUP.xlsx', engine='openpyxl',
+    file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_stroop'], engine='openpyxl',
                          na_values=np.nan)
 
     # extract values and ids from the file
@@ -451,7 +454,7 @@ def composite_executive(ids):
     from tools_general import scaler_transform
 
     # TMT-B
-    file = pd.read_excel('/data/pt_02035/LIFE_data/data/PV0426_T00041_NODUP.xlsx', engine='openpyxl')
+    file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_tmt'], engine='openpyxl')
     # extract values and ids from the file
     tmtb_time_all = file[['TMT_TIMEB']].to_numpy()
     tmt_ids_all = file['TMT_SIC'].to_numpy()
@@ -475,7 +478,7 @@ def composite_executive(ids):
     tmtb_time = tmtb_time_all[idx2]
 
     # Stroop incongruent
-    file = pd.read_excel('c:/Users/st_al/Documents/life-test/PV0426_T00926_NODUP.xlsx', engine='openpyxl')
+    file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_stroop'], engine='openpyxl')
     # extract values and ids from the file
     stroop_in_all = file[['STROOP_RO_RT_INKON']].to_numpy()
     stroop_all_ids = file['STROOP_RO_SIC'].to_numpy()
@@ -518,7 +521,7 @@ def read_medications(ids):
     import pandas as pd
 
     # read file with medications
-    file = pd.read_excel('/data/pt_02035/LIFE_data/data/PV0426_T00035_NODUP.xlsx', engine='openpyxl')
+    file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_meds'], engine='openpyxl')
     # columns to read
     meds_clms = file[['EEG_SUBSTANZ_I06B_1A', 'EEG_SUBSTANZ_I06B_2A', 'EEG_SUBSTANZ_I06B_3A',
                       'EEG_SUBSTANZ_I06B_4A', 'EEG_SUBSTANZ_I06B_5A', 'EEG_SUBSTANZ_I06B_6A',

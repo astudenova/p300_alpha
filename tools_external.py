@@ -17,7 +17,7 @@ def _get_global_reject_epochs(raw, decim):
     Returns
     -------
     reject : dict
-        threshold for various types of sensors, key - sensor type, value - rejection threshold value
+        threshold for various types of channels, key - sensor type, value - rejection threshold value
     """
 
     from autoreject import get_rejection_threshold
@@ -34,48 +34,6 @@ def _get_global_reject_epochs(raw, decim):
     epochs.pick_types(eeg=True)
     reject = get_rejection_threshold(epochs, decim=decim)
     return reject
-
-
-def hilbert_(x, axis=1):
-    """
-    Author: Mina Jamshidi Idaji (minajamshidi91@gmail.com)
-
-    Computes fast hilbert transform by zero-padding the signal to a length of power of 2.
-
-    :param x: array_like
-              Signal data.  Must be real.
-    :param int axis: the axis along which the hilbert transform is computed, default = 1
-    :return: x_h - analytic signal of x
-    """
-    if np.iscomplexobj(x):
-        return x
-    from scipy.signal import hilbert
-    if len(x.shape) == 1:
-        x = x[np.newaxis, :] if axis == 1 else x[:, np.newaxis]
-    x_zp, n_zp = zero_pad_to_pow2(x, axis=axis)
-    x_zp = np.real(x_zp)
-    x_h = hilbert(x_zp, axis=axis)
-    x_h = x_h[:, :-n_zp] if axis == 1 else x_h[:-n_zp, :]
-    return x_h
-
-
-def zero_pad_to_pow2(x, axis=1):
-    """
-    Author: Mina Jamshidi Idaji (minajamshidi91@gmail.com)
-
-    For fast computation of fft, zeros pad the signals to the next power of two
-
-    :param x: data for computation, n_signals x n_samples
-    :param int axis: dimension for computation, default = 1
-    :return: zero-padded signal
-    """
-    n_samp = x.shape[axis]
-    n_sig = x.shape[1-axis]
-    n_zp = int(2 ** np.ceil(np.log2(n_samp))) - n_samp
-    zp = np.zeros_like(x)
-    zp = zp[:n_zp] if axis == 0 else zp[:, :n_zp]
-    y = np.append(x, zp, axis=axis)
-    return y, n_zp
 
 
 def compute_ged(cov_signal, cov_noise, return_lambda=False):

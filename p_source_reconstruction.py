@@ -13,17 +13,16 @@ from scipy.stats import pearsonr
 
 from tools_general import load_json, save_pickle, save_json
 from tools_lifedataset import read_erp, create_erp_for_source_reconstruction
-from tools_signal import create_noise_cov, from_cont_to_epoch, compute_envelope, from_epoch_to_cont
+from tools_signal import create_noise_cov, from_cont_to_epoch, compute_envelope, from_epoch_to_cont, \
+    filter_in_low_frequency
 
-dir_raw = '/data/pt_02035/Data/eeg_data'
+dir_save = load_json('dirs_files',os.getcwd())['dir_save']
 
-dir_save = '/data/p_02581/save'
-
-ids = load_json('ids', '/data/hu_studenova/PycharmProjects/bsi_pipeline')
-alpha_peaks = load_json('alpha_peaks', '/data/p_02581')
+ids = load_json('ids', os.getcwd())
+alpha_peaks = load_json('alpha_peaks', os.getcwd())
 
 # for dipole fitting
-subjects_dir = '/data/hu_studenova/mne_data/MNE-fsaverage-data'
+subjects_dir = load_json('dirs_files',os.getcwd())['subjects_dir']
 subject = 'fsaverage'
 _oct = '6'
 src_dir = op.join(subjects_dir, subject, 'bem', subject + '-oct' + _oct + '-src.fif')
@@ -41,8 +40,6 @@ for i_subj, subj in enumerate(ids):
     decim = 10
     fs = erp_t.info['sfreq'] / decim
     alpha_pk = np.mean(alpha_peaks[i_subj])
-    low = 3
-    b_lf, a_lf = butter(N=4, Wn=low / fs * 2, btype='lowpass')
 
     # create an evoked array for further processing
     evoked_erp_t = create_erp_for_source_reconstruction(erp_t.copy(), decim=decim)
@@ -66,7 +63,7 @@ for i_subj, subj in enumerate(ids):
     stc_t_env_avg = np.mean(stc_t_env, axis=0)
 
     # compute average ER for each voxel
-    stc_t_filt = filtfilt(b_lf, a_lf, stc_data_epoched, axis=2)
+    stc_t_filt = filter_in_low_frequency(stc_data_epoched, fs, padlen=None)
     stc_t_avg = np.mean(stc_t_filt, axis=0)
 
     # for standard stimulus
@@ -87,7 +84,7 @@ for i_subj, subj in enumerate(ids):
     stc_s_env_avg = np.mean(stc_s_env, axis=0)
 
     # compute average ER for each voxel
-    stc_s_filt = filtfilt(b_lf, a_lf, stc_data_epoched)
+    stc_s_filt = filter_in_low_frequency(stc_data_epoched, fs, padlen=None)
     stc_s_avg = np.mean(stc_s_filt, axis=0)
 
     # save
