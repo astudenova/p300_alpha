@@ -1,3 +1,6 @@
+"""
+This pipeline computes baseline-shift indices for sensor space.
+"""
 import os
 import numpy as np
 
@@ -6,8 +9,7 @@ from tools_general import load_json, save_pickle, list_from_many
 from tools_lifedataset import read_rest
 from tools_signal import peak_in_spectrum, bsi
 
-dir_save = load_json('dirs_files',os.getcwd())['dir_save']
-
+dir_save = load_json('dirs_files', os.getcwd())['dir_save']
 ids = load_json('ids', os.getcwd())
 markers_rest = load_json('markers_rest', os.getcwd())
 

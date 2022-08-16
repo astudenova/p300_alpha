@@ -1,13 +1,18 @@
+"""
+Functions specific for LIFE data set.
+"""
 import os
-
 import numpy as np
-
+import mne
+import pandas as pd
 from tools_general import load_json
 
 
 def read_erp(subj, decim=1, notch=False, h_freq=45):
     """
     Read the data from stimulus based recordings
+
+    Adapted from Denis Engemann <denis.engemann@gmail.com>
 
     :param str subj: id of a participant
     :param int decim: decimation factor, default decim = 1 (no decimation)
@@ -16,11 +21,8 @@ def read_erp(subj, decim=1, notch=False, h_freq=45):
     :returns: erp_s, erp_t, erp_n (instance of mne.Epochs) - Epochs of three types of stimuli
     """
 
-    import os
     from tools_external import _get_global_reject_epochs
-    import mne
     from tools_signal import project_eog
-    from tools_general import load_json
 
     files_erp = load_json('files_erp', os.getcwd())
     data_erp_file = files_erp[subj]
@@ -74,8 +76,6 @@ def create_raw_for_source_reconstruction(raw, decim=5):
     :returns: evoked_raw (mne.EvokedArray) - data that can be passed to source reconstruction
     """
 
-    import mne
-
     # create new info without eog and acg channels
     raw_info = raw.copy().info
     raw_info['ch_names'] = np.asarray(raw.info['ch_names'][:-3]).tolist()
@@ -100,7 +100,6 @@ def create_erp_for_source_reconstruction(erp, decim=10):
     :returns: evoked_erp (mne.EvokedArray) - data that can be passed to source reconstruction
     """
 
-    import mne
     from tools_signal import from_epoch_to_cont
 
     # extract the data
@@ -140,7 +139,6 @@ def read_rest(subj, marker):
     :param float marker: value of starting point
     :returns: raw (mne.Raw) - preprocessed resting-state data
     """
-    import mne
 
     # read file with raw rest data
     raw = read_raw_rest(subj)
@@ -171,14 +169,16 @@ def read_rest(subj, marker):
     raw.filter(0.1, 45)
     raw.notch_filter(50, picks='eeg')
     # treat all annotation except start, break, and end as artifactual
-    raw.annotations.description[:] = ['BAD' if not dd[-1].isdigit() else dd for dd in raw.annotations.description]
+    raw.annotations.description[:] = ['BAD' if not dd[-1].isdigit() else dd
+                                      for dd in raw.annotations.description]
     # cut out bad segments
     raw_cut = raw.copy()
     raw_data = raw_cut.get_data()
+    fs = raw.info['sfreq']
     for i_ann in range(len(raw.annotations) - 1, -1, -1):
         if raw.annotations.description[i_ann] == 'BAD':
-            start = int(raw.annotations.onset[i_ann] * raw.info['sfreq'])
-            end = int((raw.annotations.onset[i_ann] + raw.annotations.duration[i_ann]) * raw.info['sfreq'])
+            start = int(raw.annotations.onset[i_ann] * fs)
+            end = int((raw.annotations.onset[i_ann] + raw.annotations.duration[i_ann]) * fs)
             raw_data = np.delete(raw_data, np.s_[start:end], axis=1)
     raw._data = raw_data
 
@@ -198,9 +198,6 @@ def read_raw_rest(subj):
     :param str subj: id of a participant
     :returns: raw (mne.Raw) - Raw instance with rest signals
     """
-    import mne
-    import os
-    from tools_general import load_json
 
     files_rest = load_json('files_rest', os.getcwd())
 
@@ -225,10 +222,6 @@ def read_cleaned_rest(subj):
     :returns: cleaned (mne.Raw) - Raw instance with rest signals
     """
 
-    import mne
-    import os
-    from tools_general import load_json
-
     files_cleaned_rest = load_json('files_clean_rest', os.getcwd())
     try:
         data_cleaned_file = files_cleaned_rest[subj]
@@ -250,7 +243,6 @@ def read_age(ids):
         age (numpy.ndarray, 1D) - age of each subject;
         ids_age (numpy.ndarray, 1D) - ids of those subjects for whom age is available
     """
-    import pandas as pd
 
     age_data = pd.read_excel(load_json('dirs_files', os.getcwd())['file_age'],
                              engine='openpyxl')
@@ -272,8 +264,6 @@ def read_gender(ids):
         gender (numpy.ndarray, 1D) - gender of each subject;
         ids_gender (numpy.ndarray, 1D) - ids of those subjects for whom gender is available
     """
-
-    import pandas as pd
 
     gender_data = pd.read_excel(load_json('dirs_files',os.getcwd())['file_gender'],
                                 engine='openpyxl')
@@ -297,33 +287,32 @@ def read_cerad(ids):
         FDR (numpy.ndarray, 1D) - scores for Retrieve figures task;
         cerad_ids (numpy.ndarray, 1D) - ids of those subjects for whom scores were available
     """
-    import pandas as pd
 
     file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_cerad'], engine='openpyxl')
     file = file.fillna(0)  # fills nan values with zeros
 
     # selects columns for Retrieve word list task
     cerad_WLDR_all = file[
-        ['CERAD_WL4_BUTTER', 'CERAD_WL4_ARM', 'CERAD_WL4_STRAND', 'CERAD_WL4_BRIEF', 'CERAD_WL4_KONIGI',
-         'CERAD_WL4_HUTTE', 'CERAD_WL4_STANGE', 'CERAD_WL4_KARTE', 'CERAD_WL4_GRAS', 'CERAD_WL4_MOTOR']].to_numpy()
+        ['CERAD_WL4_BUTTER', 'CERAD_WL4_ARM', 'CERAD_WL4_STRAND', 'CERAD_WL4_BRIEF',
+         'CERAD_WL4_KONIGI', 'CERAD_WL4_HUTTE', 'CERAD_WL4_STANGE', 'CERAD_WL4_KARTE',
+         'CERAD_WL4_GRAS', 'CERAD_WL4_MOTOR']].to_numpy()
     # selects columns for Word list recognition
     cerad_WLR_all = file[
-        ['CERAD_WLW_KIRCHE', 'CERAD_WLW_KAFFEE', 'CERAD_WLW_BUTTER', 'CERAD_WLW_DOLLAR', 'CERAD_WLW_ARM',
-         'CERAD_WLW_STRAND',
-         'CERAD_WLW_FUNF', 'CERAD_WLW_BRIEF', 'CERAD_WLW_HOTEL', 'CERAD_WLW_BERG', 'CERAD_WLW_KONIGI',
-         'CERAD_WLW_HUTTE',
-         'CERAD_WLW_PANTOF', 'CERAD_WLW_STANGE', 'CERAD_WLW_DORF', 'CERAD_WLW_BAND', 'CERAD_WLW_KARTE',
-         'CERAD_WLW_HEER',
-         'CERAD_WLW_GRAS', 'CERAD_WLW_MOTOR']].to_numpy(dtype='float')
+        ['CERAD_WLW_KIRCHE', 'CERAD_WLW_KAFFEE', 'CERAD_WLW_BUTTER', 'CERAD_WLW_DOLLAR',
+         'CERAD_WLW_ARM', 'CERAD_WLW_STRAND', 'CERAD_WLW_FUNF', 'CERAD_WLW_BRIEF',
+         'CERAD_WLW_HOTEL', 'CERAD_WLW_BERG', 'CERAD_WLW_KONIGI', 'CERAD_WLW_HUTTE',
+         'CERAD_WLW_PANTOF', 'CERAD_WLW_STANGE', 'CERAD_WLW_DORF', 'CERAD_WLW_BAND',
+         'CERAD_WLW_KARTE', 'CERAD_WLW_HEER', 'CERAD_WLW_GRAS',
+         'CERAD_WLW_MOTOR']].to_numpy(dtype='float')
     # selects columns for Retrieve figures task
     cerad_FDR_all = file[
-        ['CERAD_FIGW_1A', 'CERAD_FIGW_1B', 'CERAD_FIGW_2A', 'CERAD_FIGW_2B', 'CERAD_FIGW_2C', 'CERAD_FIGW_3A',
-         'CERAD_FIGW_3B',
-         'CERAD_FIGW_4A', 'CERAD_FIGW_4B', 'CERAD_FIGW_4C', 'CERAD_FIGW_4D', 'CERAD_FIGW_5A', 'CERAD_FIGW_5B',
-         'CERAD_FIGW_5C']].to_numpy(dtype='float')
+        ['CERAD_FIGW_1A', 'CERAD_FIGW_1B', 'CERAD_FIGW_2A', 'CERAD_FIGW_2B',
+         'CERAD_FIGW_2C', 'CERAD_FIGW_3A', 'CERAD_FIGW_3B', 'CERAD_FIGW_4A',
+         'CERAD_FIGW_4B', 'CERAD_FIGW_4C', 'CERAD_FIGW_4D', 'CERAD_FIGW_5A',
+         'CERAD_FIGW_5B', 'CERAD_FIGW_5C']].to_numpy(dtype='float')
 
     cerad_all_ids = file['CERAD_SIC'].to_numpy()
-    cerad_ids, idx1, idx2 = np.intersect1d(ids, cerad_all_ids, return_indices=True)
+    cerad_ids, _, idx2 = np.intersect1d(ids, cerad_all_ids, return_indices=True)
 
     WLDR = np.mean(cerad_WLDR_all, axis=1)[idx2]  # resulting score is average over all answers
 
@@ -348,7 +337,8 @@ def read_cerad(ids):
 
 def composite_attention(ids):
     """
-    Computes scores for composite attention from TMT-A time-to-complete and Stroop neutral time-to-complete
+    Computes scores for composite attention from TMT-A time-to-complete and
+    Stroop neutral time-to-complete
 
     :param list ids: ids of subjects
     :returns:
@@ -356,7 +346,6 @@ def composite_attention(ids):
         attention_ids (numpy.ndarray, 1D) - ids of those subjects for whom scores have been computed
     """
     from tools_general import scaler_transform
-    import pandas as pd
 
     # TMT-A
     file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_tmt'], engine='openpyxl',
@@ -376,12 +365,13 @@ def composite_attention(ids):
     # substitute implausible scores and nan values with averages
     if len(impl_idx) > 0:
         tmta_time_all[impl_idx] = np.nanmean(np.delete(tmta_time_all, impl_idx, axis=0))
-        tmta_time_all[np.isnan(tmta_time_all)] = np.nanmean(np.delete(tmta_time_all, impl_idx, axis=0))
+        tmta_time_all[np.isnan(tmta_time_all)] = np.nanmean(np.delete(tmta_time_all,
+                                                                      impl_idx, axis=0))
     else:
         tmta_time_all[np.isnan(tmta_time_all)] = np.nanmean(tmta_time_all)
 
     # save values only for subjects in 'ids'
-    tmt_ids, idx1, idx2 = np.intersect1d(ids, tmt_ids_all, return_indices=True)
+    tmt_ids, _, idx2 = np.intersect1d(ids, tmt_ids_all, return_indices=True)
     tmta_time = tmta_time_all[idx2].reshape((-1))  # the smaller, the better
 
     # Stroop neutral
@@ -403,11 +393,11 @@ def composite_attention(ids):
         stroop_n_all[np.isnan(stroop_n_all)] = np.nanmean(stroop_n_all)
 
     # save values only for subjects in 'ids'
-    stroop_ids, idx1, idx2 = np.intersect1d(ids, stroop_all_ids, return_indices=True)
+    stroop_ids, _, idx2 = np.intersect1d(ids, stroop_all_ids, return_indices=True)
     stroop_n = stroop_n_all[idx2].reshape((-1))  # the smaller, the better
 
     # find common ids for TMT and Stroop
-    ids_tmt_ids, idx1, idx2 = np.intersect1d(ids, tmt_ids, return_indices=True)
+    ids_tmt_ids, _, idx2 = np.intersect1d(ids, tmt_ids, return_indices=True)
     attention_ids, idx3, idx4 = np.intersect1d(ids_tmt_ids, stroop_ids, return_indices=True)
 
     # scale transform and average
@@ -420,7 +410,8 @@ def composite_attention(ids):
 
 def composite_memory(ids):
     """
-    Computes scores for composite memory from CERADplus: Retrieve word list, Word list recognition, Retrieve figures
+    Computes scores for composite memory from CERADplus: Retrieve word list,
+    Word list recognition, Retrieve figures
 
     :param list ids: ids of subjects
     :returns:
@@ -430,7 +421,7 @@ def composite_memory(ids):
     from tools_general import scaler_transform
 
     WLDR, WLR, FDR, cerad_ids = read_cerad(ids)  # the bigger, the better
-    memory_ids, idx1, idx2 = np.intersect1d(ids, cerad_ids, return_indices=True)
+    memory_ids, _, idx2 = np.intersect1d(ids, cerad_ids, return_indices=True)
 
     # scale transform and average
     memory_all = np.vstack((WLDR[idx2], WLR[idx2], FDR[idx2]))
@@ -442,15 +433,14 @@ def composite_memory(ids):
 
 def composite_executive(ids):
     """
-    Computes scores for composite executive function from TMT-b time to complete and Stroop-incongruent
-    time-to-complete
+    Computes scores for composite executive function from TMT-b time to complete
+    and Stroop-incongruent time-to-complete
 
     :param list ids: ids of subjects
     :returns:
         executive_composite (numpy.ndarray, 1D) - composite scores for executive function;
         executive_ids (numpy.ndarray, 1D) - ids of those subjects for whom scores have been computed
     """
-    import pandas as pd
     from tools_general import scaler_transform
 
     # TMT-B
@@ -469,12 +459,13 @@ def composite_executive(ids):
     # substitute implausible scores and nan values with averages
     if len(impl_idx) > 0:
         tmtb_time_all[impl_idx] = np.nanmean(np.delete(tmtb_time_all, impl_idx, axis=0))
-        tmtb_time_all[np.isnan(tmtb_time_all)] = np.nanmean(np.delete(tmtb_time_all, impl_idx, axis=0))
+        tmtb_time_all[np.isnan(tmtb_time_all)] = np.nanmean(np.delete(tmtb_time_all,
+                                                                      impl_idx, axis=0))
     else:
         tmtb_time_all[np.isnan(tmtb_time_all)] = np.nanmean(tmtb_time_all)
 
     # save values only for subjects in 'ids'
-    tmt_ids, idx1, idx2 = np.intersect1d(ids, tmt_ids_all, return_indices=True)
+    tmt_ids, _, idx2 = np.intersect1d(ids, tmt_ids_all, return_indices=True)
     tmtb_time = tmtb_time_all[idx2]
 
     # Stroop incongruent
@@ -488,16 +479,17 @@ def composite_executive(ids):
     impl_idx = np.array([j for i in impl_idx for j in i])
     if len(impl_idx) > 0:
         stroop_in_all[impl_idx] = np.nanmean(np.delete(stroop_in_all, impl_idx, axis=0))
-        stroop_in_all[np.isnan(stroop_in_all)] = np.nanmean(np.delete(stroop_in_all, impl_idx, axis=0))
+        stroop_in_all[np.isnan(stroop_in_all)] = np.nanmean(np.delete(stroop_in_all,
+                                                                      impl_idx, axis=0))
     else:
         stroop_in_all[np.isnan(stroop_in_all)] = np.nanmean(stroop_in_all)
 
     # save values only for subjects in 'ids'
-    stroop_ids, idx1, idx2 = np.intersect1d(ids, stroop_all_ids, return_indices=True)
+    stroop_ids, _, idx2 = np.intersect1d(ids, stroop_all_ids, return_indices=True)
     stroop_in = stroop_in_all[idx2]
 
     # find common ids for TMT and Stroop
-    ids_tmt_ids, idx1, idx2 = np.intersect1d(ids, tmt_ids, return_indices=True)
+    ids_tmt_ids, _, idx2 = np.intersect1d(ids, tmt_ids, return_indices=True)
     executive_ids, idx3, idx4 = np.intersect1d(ids_tmt_ids, stroop_ids, return_indices=True)
 
     # scale-transform and average
@@ -518,8 +510,6 @@ def read_medications(ids):
         idx (numpy.ndarray, 1D) - indices of subjects to exclude in 'ids'
     """
 
-    import pandas as pd
-
     # read file with medications
     file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_meds'], engine='openpyxl')
     # columns to read
@@ -527,31 +517,37 @@ def read_medications(ids):
                       'EEG_SUBSTANZ_I06B_4A', 'EEG_SUBSTANZ_I06B_5A', 'EEG_SUBSTANZ_I06B_6A',
                       'EEG_SUBSTANZ_I06B_7A', 'EEG_SUBSTANZ_I06B_8A', 'EEG_SUBSTANZ_I06B_9A',
                       'EEG_SUBSTANZ_I06B_10A', 'EEG_SUBSTANZ_I06B_11A', 'EEG_SUBSTANZ_I06B_12A',
-                      'EEG_SUBSTANZ_I06B_13A', 'EEG_SUBSTANZ_I06B_14A', 'EEG_SUBSTANZ_I06B_15A']].to_numpy()
+                      'EEG_SUBSTANZ_I06B_13A', 'EEG_SUBSTANZ_I06B_14A',
+                      'EEG_SUBSTANZ_I06B_15A']].to_numpy()
     meds_all_ids = file['EEG_SUBSTANZ_SIC'].to_numpy()
     # remove empty columns
     meds_all = [meds_clms[i][~pd.isnull(meds_clms[i])] for i in range(meds_clms.shape[0])]
     # gather unique medications
     unique_meds = []
-    for i in range(len(meds_all)):
-        unique_meds += list(meds_all[i])
+    for med in meds_all:
+        unique_meds += list(med)
     unique_meds = np.unique(unique_meds)
 
     # list of medications to exclude
-    exclude_meds = ['amantadin al 100', 'vasikur', 'cifapopram', 'cipralex', 'cipramil', 'citalopram', 'citalopram al',
-                    'citalopram hexal 50', 'citralopram', 'elontril', 'maprotilin', 'venlafaxin', 'venlafaxin?',
-                    'yentreve',
-                    'apydan extent', 'keppra', 'levetirazetam', 'phenytoin', 'pipamperon 40', 'axura', 'memando',
-                    'antidepressiva valproat', 'antidrpressiva', 'ariclaim', 'cymbalta', 'cymbalty', 'fluxet',
-                    'sertralin',
-                    'stangyl', 'trevilor', 'fluanxol', 'seroquel prolong', 'sulpirid- ct', 'opipramol', 'alprazolam',
-                    'diazepam',
-                    'faustan', 'flurozepam', 'tavor', 'temgesic', 'triasol', 'demenzmedikament', 'exelon', 'biogamma',
-                    'carbamazepin', 'carbamezapin', 'ofiril', 'trileptal', 'vimpat', 'levocomp', 'levodop neuraxpharm',
-                    'madopar', 'matopar', 'stalevo', 'morphin', 'sevredol', 'fentanyl', 'amixx', 'parkinsonpflaster',
-                    'requip modutab', 'ropinirol', 'sifrol', 'sormodren', 'tabl. zur beweglichkeit bei parkinson',
-                    'medi. gegen depression', 'mirtazapin', 'amitriptilin', 'amitriptylin', 'amitryptilin', 'paroxetin',
-                    'saroten', 'valdoxan', 'opipram', 'sulpril']
+    exclude_meds = ['amantadin al 100', 'vasikur', 'cifapopram', 'cipralex',
+                    'cipramil', 'citalopram', 'citalopram al', 'citalopram hexal 50',
+                    'citralopram', 'elontril', 'maprotilin', 'venlafaxin',
+                    'venlafaxin?', 'yentreve', 'apydan extent', 'keppra',
+                    'levetirazetam', 'phenytoin', 'pipamperon 40', 'axura',
+                    'memando', 'antidepressiva valproat', 'antidrpressiva', 'ariclaim',
+                    'cymbalta', 'cymbalty', 'fluxet', 'sertralin',
+                    'stangyl', 'trevilor', 'fluanxol', 'seroquel prolong',
+                    'sulpirid- ct', 'opipramol', 'alprazolam', 'diazepam',
+                    'faustan', 'flurozepam', 'tavor', 'temgesic',
+                    'triasol', 'demenzmedikament', 'exelon', 'biogamma',
+                    'carbamazepin', 'carbamezapin', 'ofiril', 'trileptal',
+                    'vimpat', 'levocomp', 'levodop neuraxpharm',
+                    'madopar', 'matopar', 'stalevo', 'morphin',
+                    'sevredol', 'fentanyl', 'amixx', 'parkinsonpflaster',
+                    'requip modutab', 'ropinirol', 'sifrol', 'sormodren',
+                    'tabl. zur beweglichkeit bei parkinson', 'medi. gegen depression',
+                    'mirtazapin', 'amitriptilin', 'amitriptylin', 'amitryptilin',
+                    'paroxetin', 'saroten', 'valdoxan', 'opipram', 'sulpril']
 
     # match names of medications in exclude list to how it is named in the data
     exclude_meds_case = []
@@ -561,8 +557,8 @@ def read_medications(ids):
                 exclude_meds_case.append(u_med)
 
     # find subjects who was under the medication at the time of testing
-    exclude_meds_all = [len(set(exclude_meds_case) - set(meds_all[i])) != len(exclude_meds_case) for i in
-                        range(len(meds_all))]
+    exclude_meds_all = [len(set(exclude_meds_case) - set(meds_all[i])) != len(exclude_meds_case)
+                        for i in range(len(meds_all))]
     meds_ids, idx, _ = np.intersect1d(ids, meds_all_ids[exclude_meds_all], return_indices=True)
 
     return meds_ids, idx

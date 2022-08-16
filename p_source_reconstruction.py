@@ -1,40 +1,29 @@
-import mne
+"""
+This pipeline performs source reconstruction on stimulus data, and stores reconstructed ERs and
+alpha rhythm envelopes, and their trial-by-trial correlations.
+Similar to p_read_erp_alpha_save.py but for source space.
+"""
 import os
 import os.path as op
-import matplotlib as mpl
-import scipy
-
-mpl.use("Qt5Agg")
-import matplotlib.pyplot as plt
 import numpy as np
-
-from scipy.signal import butter, filtfilt, hilbert
+import mne
 from scipy.stats import pearsonr
-
-from tools_general import load_json, save_pickle, save_json
+from tools_general import load_json, load_pickle, save_pickle, save_json
 from tools_lifedataset import read_erp, create_erp_for_source_reconstruction
-from tools_signal import create_noise_cov, from_cont_to_epoch, compute_envelope, from_epoch_to_cont, \
-    filter_in_low_frequency
+from tools_signal import create_noise_cov, from_cont_to_epoch, compute_envelope, \
+    from_epoch_to_cont, filter_in_low_frequency
 
-dir_save = load_json('dirs_files',os.getcwd())['dir_save']
-
+dir_save = load_json('dirs_files', os.getcwd())['dir_save']
 ids = load_json('ids', os.getcwd())
-alpha_peaks = load_json('alpha_peaks', os.getcwd())
+alpha_peaks = load_pickle('alpha_peaks', os.getcwd())
 
 # for dipole fitting
-subjects_dir = load_json('dirs_files',os.getcwd())['subjects_dir']
+subjects_dir = load_json('dirs_files', os.getcwd())['subjects_dir']
 subject = 'fsaverage'
-_oct = '6'
-src_dir = op.join(subjects_dir, subject, 'bem', subject + '-oct' + _oct + '-src.fif')
-fwd_dir = op.join(subjects_dir, subject, 'bem', subject + '-oct' + _oct + '-fwd.fif')
-trans_dir = op.join(subjects_dir, subject, 'bem', subject + '-trans.fif')
-bem_sol_dir = op.join(subjects_dir, subject, 'bem', subject + '-5120-5120-5120-bem-sol.fif')
-inv_op_dir = op.join(subjects_dir, subject, 'bem', subject + '-oct' + _oct + '-inv.fif')
+fwd_dir = op.join(subjects_dir, subject, 'bem', subject + '-oct6' + '-fwd.fif')
 forward = mne.read_forward_solution(fwd_dir)
 
-
 for i_subj, subj in enumerate(ids):
-
     erp_s, erp_t, _ = read_erp(subj, notch=True, h_freq=20)
 
     decim = 10
@@ -49,10 +38,10 @@ for i_subj, subj in enumerate(ids):
     # create noise covariance with a bias of data length
     noise_cov = create_noise_cov(evoked_erp_t.data.shape, evoked_erp_t.info)
     # source reconstruction with eLORETA
-    inv_op = mne.minimum_norm.make_inverse_operator(evoked_erp_t.info, forward, noise_cov, loose=1.0, depth=5,
-                                                    fixed=False)
-    stc_el = mne.minimum_norm.apply_inverse(evoked_erp_t.copy(),
-                                            inverse_operator=inv_op, lambda2=0.05, method='eLORETA', pick_ori='normal')
+    inv_op = mne.minimum_norm.make_inverse_operator(evoked_erp_t.info, forward, noise_cov,
+                                                    loose=1.0, depth=5, fixed=False)
+    stc_el = mne.minimum_norm.apply_inverse(evoked_erp_t.copy(), inverse_operator=inv_op,
+                                            lambda2=0.05, method='eLORETA', pick_ori='normal')
     print('eLORETA fit is completed.')
     stc_data_epoched = from_cont_to_epoch(stc_el.data, n_epoch=len(erp_t.events),
                                           n_times=int(len(stc_el.times) / len(erp_t.events)))
@@ -70,10 +59,10 @@ for i_subj, subj in enumerate(ids):
     # create noise covariance with a bias of data length
     noise_cov = create_noise_cov(evoked_erp_s.data.shape, evoked_erp_s.info)
     # source reconstruction with eLORETA
-    inv_op = mne.minimum_norm.make_inverse_operator(evoked_erp_s.info, forward, noise_cov, loose=1.0, depth=5,
-                                                    fixed=False)
-    stc_el = mne.minimum_norm.apply_inverse(evoked_erp_s.copy(),
-                                            inverse_operator=inv_op, lambda2=0.05, method='eLORETA', pick_ori='normal')
+    inv_op = mne.minimum_norm.make_inverse_operator(evoked_erp_s.info, forward, noise_cov,
+                                                    loose=1.0, depth=5, fixed=False)
+    stc_el = mne.minimum_norm.apply_inverse(evoked_erp_s.copy(), inverse_operator=inv_op,
+                                            lambda2=0.05, method='eLORETA', pick_ori='normal')
     print('eLORETA fit is completed.')
     stc_data_epoched = from_cont_to_epoch(stc_el.data, n_epoch=len(erp_s.events),
                                           n_times=int(len(stc_el.times) / len(erp_s.events)))

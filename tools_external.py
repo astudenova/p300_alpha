@@ -1,3 +1,6 @@
+"""
+Functions written by other researchers.
+"""
 import numpy as np
 import mne
 from scipy.linalg import eig
@@ -17,7 +20,7 @@ def _get_global_reject_epochs(raw, decim):
     Returns
     -------
     reject : dict
-        threshold for various types of channels, key - sensor type, value - rejection threshold value
+        threshold for various types of channels, key - sensor type, value - rejection threshold
     """
 
     from autoreject import get_rejection_threshold
@@ -36,7 +39,7 @@ def _get_global_reject_epochs(raw, decim):
     return reject
 
 
-def compute_ged(cov_signal, cov_noise, return_lambda=False):
+def compute_ged(cov_signal, cov_noise):
     """
     The code is from https://github.com/nschawor/eeg-leadfield-mixing/blob/main/code/ssd.py
     by Schaworonkow Natalie
@@ -91,10 +94,7 @@ def compute_ged(cov_signal, cov_noise, return_lambda=False):
     filters = filters[:, idx]
     filters = np.matmul(M, filters)
 
-    if return_lambda:
-        return filters, lambda_val
-    else:
-        return filters
+    return filters
 
 
 def compute_patterns(cov_signal, filters):

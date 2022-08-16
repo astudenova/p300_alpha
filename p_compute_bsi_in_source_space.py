@@ -1,26 +1,23 @@
-import mne
+"""
+This pipeline computes baseline-shift indices in source space.
+"""
 import os
 import os.path as op
+import mne
 import numpy as np
 from tools_general import load_json, save_pickle, load_pickle
 from tools_lifedataset import read_rest, create_raw_for_source_reconstruction
 from tools_signal import bsi, create_noise_cov
 
-dir_save = load_json('dirs_files',os.getcwd())['dir_save']
-
+dir_save = load_json('dirs_files', os.getcwd())['dir_save']
 ids = load_json('ids', os.getcwd())
 alpha_peaks = load_pickle('alpha_peaks', os.getcwd())
 markers_rest = load_json('markers_rest', os.getcwd())
 
 # folders for source reconstruction
-subjects_dir = load_json('dirs_files',os.getcwd())['subjects_dir']
+subjects_dir = load_json('dirs_files', os.getcwd())['subjects_dir']
 subject = 'fsaverage'
-_oct = '6'
-src_dir = op.join(subjects_dir, subject, 'bem', subject + '-oct' + _oct + '-src.fif')
-fwd_dir = op.join(subjects_dir, subject, 'bem', subject + '-oct' + _oct + '-fwd.fif')
-trans_dir = op.join(subjects_dir, subject, 'bem', subject + '-trans.fif')
-bem_sol_dir = op.join(subjects_dir, subject, 'bem', subject + '-5120-5120-5120-bem-sol.fif')
-inv_op_dir = op.join(subjects_dir, subject, 'bem', subject + '-oct' + _oct + '-inv.fif')
+fwd_dir = op.join(subjects_dir, subject, 'bem', subject + '-oct6' + '-fwd.fif')
 
 for i_subj, subj in enumerate(ids):
 
@@ -39,8 +36,8 @@ for i_subj, subj in enumerate(ids):
     forward = mne.read_forward_solution(fwd_dir)
     inv_op = mne.minimum_norm.make_inverse_operator(evoked_raw.info, forward, noise_cov,
                                                     loose=1.0, depth=5, fixed=False)
-    stc_el = mne.minimum_norm.apply_inverse(evoked_raw.copy(),
-                                            inverse_operator=inv_op, lambda2=0.05, method='eLORETA', pick_ori='normal')
+    stc_el = mne.minimum_norm.apply_inverse(evoked_raw.copy(), inverse_operator=inv_op,
+                                            lambda2=0.05, method='eLORETA', pick_ori='normal')
 
     # compute BSI for each voxel
     stc_el_data = stc_el._data

@@ -1,6 +1,10 @@
-import numpy as np
-import json
+"""
+Functions for input and output, and some statistics.
+"""
 import os.path as op
+import json
+import pickle
+import numpy as np
 
 
 def save_json_from_numpy(filename, folder, var):
@@ -64,6 +68,7 @@ def load_json(filename, folder):
 def save_pickle(filename, folder, var):
     """
     Save array as pickle file
+
     by Mina Jamshidi Idaji (minajamshidi91@gmail.com)
 
     :param str filename: the name of the saved file
@@ -71,7 +76,6 @@ def save_pickle(filename, folder, var):
     :param var: variable to save
     """
 
-    import pickle
     with open(op.join(folder, filename), "wb") as output_file:
         pickle.dump(var, output_file)
 
@@ -79,6 +83,7 @@ def save_pickle(filename, folder, var):
 def load_pickle(filename, folder):
     """
     Load array from pickle file
+
     by Mina Jamshidi Idaji (minajamshidi91@gmail.com)
 
     :param str filename: the name of the saved file
@@ -86,7 +91,6 @@ def load_pickle(filename, folder):
     :return: var - variable
     """
 
-    import pickle
     with open(op.join(folder, filename), "rb") as input_file:
         var = pickle.load(input_file)
     return var
@@ -119,7 +123,7 @@ def list_from_many(ids, dir_read, file_ext, type_read='json'):
     """
     output = []
     not_found = []
-    for i_subj, subj in enumerate(ids):
+    for subj in ids:
         try:
             if type_read == 'json':
                 output.append(load_json_to_numpy(subj + file_ext, dir_read))
