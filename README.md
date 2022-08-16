@@ -24,4 +24,4 @@ tools_plotting.py - function for plotting
 tools_signal.py - function for signal processing and data processing
 
 Anonymized data will be made available upon request through the application procedure carried out by the LIFE-Study administration 
-(https://life.uni-leipzig.de/de/erwachsenen  kohorten/lifeadult.html).
+(https://www.uniklinikum-leipzig.de/einrichtungen/life).
