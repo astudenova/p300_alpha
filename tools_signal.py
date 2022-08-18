@@ -6,35 +6,26 @@ import mne
 from scipy.signal import butter, filtfilt, welch, find_peaks
 
 
-def peak_in_spectrum(Pxx, f):
+def peak_in_spectrum(Pxx, freq):
     """
     Computes peak frequency in the alpha band 8-12 Hz from the given spectrum
 
     :param numpy.ndarray Pxx: amplitude spectrum, recommended resolution - 0.1 Hz,
         recommended window - more than 5 sec (for smoothness) (dimensions - 1D)
-    :param numpy.ndarray f: frequencies corresponding to the spectrum (dimensions - 1D)
-    :returns: alpha_peak (float) - peak frequency in the alpha band
+    :param numpy.ndarray freq: frequencies corresponding to the spectrum (dimensions - 1D)
+    :returns: (float) - peak frequency in the alpha band
     """
 
     # find peak that are sufficiently far apart
     peak_locs, _ = find_peaks(Pxx, distance=80)
 
     # find all peaks that landed into the 8-12 range
-    alphapks = []
-    for pk in peak_locs:
-        if f[pk] > 8 and f[pk] < 12:
-            alphapks.append(f[pk])
+    alphapks = [freq[pk] for pk in peak_locs if 8 < freq[pk] < 12]
 
     # if multiple peaks were found, take average
     # if no peaks were found, set peak frequency to 10 Hz
-    if len(alphapks) > 1:
-        alpha_peak = np.mean(alphapks)
-    elif len(alphapks) == 1:
-        alpha_peak = alphapks[0]
-    else:
-        alpha_peak = 10
 
-    return alpha_peak
+    return float(np.mean(alphapks)) if alphapks else 10.0
 
 
 def filtfilt_with_padding(signal, b_coeff, a_coeff, padlen):
@@ -45,7 +36,7 @@ def filtfilt_with_padding(signal, b_coeff, a_coeff, padlen):
     :param numpy.ndarray b_coeff: filter coefficients (dimensions - 1D)
     :param numpy.ndarray a_coeff: filter coefficients (dimensions - 1D)
     :param int padlen: the desirable window for padding
-    :returns: x_filt (numpy.ndarray, 1D) - filtered signal
+    :returns: (numpy.ndarray, 1D) - filtered signal
     """
 
     # make sure it is a column vector
@@ -54,9 +45,8 @@ def filtfilt_with_padding(signal, b_coeff, a_coeff, padlen):
 
     x_pad = np.hstack((np.flip(signal)[-padlen:], signal, np.flip(signal[-padlen:])))
     x_padded = filtfilt(b_coeff, a_coeff, x_pad, padtype=None)
-    x_filt = x_padded[padlen:-padlen]
 
-    return x_filt
+    return x_padded[padlen:-padlen]
 
 
 def bsi_pearson(x_ampl, x_lowpass, n_bins=20):
@@ -141,17 +131,15 @@ def filter_in_low_frequency(signal, fs, padlen, padding_mirror=False):
     :param padlen: the length of padded samples
     :param bool padding_mirror: whether to use mirroring when padding,
         default=False - using zero padding
-    :return: lowpass (numpy.ndarray) - filtered signal
+    :return: (numpy.ndarray) - filtered signal
     """
 
-    lf = 3
-    b_lf, a_lf = butter(N=4, Wn=lf / fs * 2, btype='lowpass')
+    lf_cutoff = 3
+    b_lf, a_lf = butter(N=4, Wn=lf_cutoff / fs * 2, btype='lowpass')
     if padding_mirror:
-        lowpass = filtfilt_with_padding(signal, b_lf, a_lf, padlen)
+        return filtfilt_with_padding(signal, b_lf, a_lf, padlen)
     else:
-        lowpass = filtfilt(b_lf, a_lf, signal, padlen=padlen)
-
-    return lowpass
+        return filtfilt(b_lf, a_lf, signal, padlen=padlen)
 
 
 def compute_envelope(data, n_epoch, n_ch, fs, alpha_peaks=None, subtract=False):
@@ -183,8 +171,7 @@ def compute_envelope(data, n_epoch, n_ch, fs, alpha_peaks=None, subtract=False):
         f, Pxx = welch(data_cont, fs=fs, nperseg=10 * fs, noverlap=5 * fs,
                        nfft=10 * fs, detrend=False)
         alpha_peaks = np.array([peak_in_spectrum(Pxx[i_ch], f) for i_ch in range(channels)])
-    else:
-        if len(alpha_peaks) != channels:
+    elif len(alpha_peaks) != channels:
             raise ValueError('alpha_peaks should contain value for each channel.')
 
     # compute average ER
@@ -193,10 +180,7 @@ def compute_envelope(data, n_epoch, n_ch, fs, alpha_peaks=None, subtract=False):
         data = np.array([data[i_ep] - epochs_avg for i_ep in range(epochs)])
 
     # estimate padlen
-    if times < 2000:
-        padlen = int(times / 5)
-    else:
-        padlen = 50000
+    padlen = int(times / 5) if times < 2000 else 50000
 
     for i_ch in range(channels):
         alpha_peak = alpha_peaks[i_ch]
@@ -218,23 +202,21 @@ def filter_in_alpha_band(signal, fs, padlen, alpha_peak=10, padding_mirror=False
     :param alpha_peak: peak frequency, default=10 Hz
     :param bool padding_mirror: whether to use mirroring when padding,
         default=False - using zero padding
-    :return: alpha (numpy.ndarray) - filtered signal
+    :return: (numpy.ndarray) - filtered signal
     """
 
     adj_band = np.array([alpha_peak - 2, alpha_peak + 2])
     b10, a10 = butter(N=2, Wn=adj_band / fs * 2, btype='bandpass')
     # filter in the alpha band
     if padding_mirror:
-        alpha = filtfilt_with_padding(signal, b10, a10, padlen)
+        return filtfilt_with_padding(signal, b10, a10, padlen)
     else:
-        alpha = filtfilt(b10, a10, signal, padlen=padlen, axis=1)
-
-    return alpha
+        return filtfilt(b10, a10, signal, padlen=padlen, axis=1)
 
 
 def project_eog(raw, decim=1, reject_with_threshold=False):
     """
-    Computes the projections for eye-movements subspace
+    Computes the projections for eye-movements subspace, add projections to raw
 
     Adapted from Denis Engemann <denis.engemann@gmail.com>
 
@@ -242,20 +224,16 @@ def project_eog(raw, decim=1, reject_with_threshold=False):
     :param int decim: decimation factor, used only for computation, default = 1 (no decimation)
     :param bool reject_with_threshold: additional rejection
         of eye-movement epochs based on the amplitude, default False
-    :returns: raw (mne.Raw) - instance of mne.Raw with projections added
     """
     from autoreject import get_rejection_threshold
 
+    reject_eog = None
     if reject_with_threshold:
         raw_copy = raw.copy()
         eog_epochs = mne.preprocessing.create_eog_epochs(raw_copy, ch_name=['VEOG', 'HEOG'])
         if len(eog_epochs) >= 5:
             reject_eog = get_rejection_threshold(eog_epochs, decim=decim)
             del reject_eog['eog']
-        else:
-            reject_eog = None
-    else:
-        reject_eog = None
 
     proj_eog = mne.preprocessing.compute_proj_eog(
         raw, average=True, reject=reject_eog, n_mag=1, n_grad=1, n_eeg=1, ch_name=['VEOG', 'HEOG'])
@@ -313,10 +291,7 @@ def pk_latencies_amplitudes(data, win, times, direction):
         pk_ampl = epoch[peak_locs - win_samples[0]]
         # if several peaks, take the most extreme one
         if len(pk_ampl) > 1:
-            if direction == 'pos':
-                idx_max = np.argmax(pk_ampl)
-            if direction == 'neg':
-                idx_max = np.argmin(pk_ampl)
+            idx_max = np.argmax(pk_ampl) if direction == 'pos' else np.argmin(pk_ampl)
             peaks[e_i] = [peak_locs[idx_max], pk_time[idx_max], pk_ampl[idx_max]]
         else:
             peaks[e_i] = [peak_locs, pk_time, pk_ampl]
@@ -332,14 +307,13 @@ def create_noise_cov(data_size, data_info):
 
     :param tuple data_size: size of original data (dimensions - 1D)
     :param mne.Info data_info: info that corresponds to the original data
-    :returns: noise_cov (mne.Covariance) - noise covariance for further source reconstruction
+    :returns: (mne.Covariance) - noise covariance for further source reconstruction
     """
 
     data1 = np.random.normal(loc=0.0, scale=1.0, size=data_size)
     raw1 = mne.io.RawArray(data1, data_info)
-    noise_cov = mne.compute_raw_covariance(raw1, tmin=0, tmax=None)
 
-    return noise_cov
+    return mne.compute_raw_covariance(raw1, tmin=0, tmax=None)
 
 
 def lda_(signal, noise, win, time_vec):
