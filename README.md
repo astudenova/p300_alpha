@@ -13,6 +13,8 @@ p_source_reconstruction.py - pipline for computation of saving ERs, alpha envelo
 
 plots.py - pipeline for plotting fig. 1-8
 
+simulations_fig_methods.py - simulates non-zero mean oscillations for figure in Methods section
+
 tools_external.py - functions from other researchers
 
 tools_general.py - functions for loading and saving files, and some statistics
