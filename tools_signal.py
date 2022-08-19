@@ -211,7 +211,7 @@ def filter_in_alpha_band(signal, fs, padlen, alpha_peak=10, padding_mirror=False
     if padding_mirror:
         return filtfilt_with_padding(signal, b10, a10, padlen)
     else:
-        return filtfilt(b10, a10, signal, padlen=padlen, axis=1)
+        return filtfilt(b10, a10, signal, padlen=padlen)
 
 
 def project_eog(raw, decim=1, reject_with_threshold=False):

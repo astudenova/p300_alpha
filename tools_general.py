@@ -32,8 +32,7 @@ def load_json_to_numpy(filename, folder):
     with open(op.join(folder, filename), "r") as f:
         saved_data = json.load(f)
 
-    var = np.array(saved_data)
-    return var
+    return np.array(saved_data)
 
 
 def save_json(filename, folder, var):
@@ -61,8 +60,7 @@ def load_json(filename, folder):
     with open(op.join(folder, filename), "r") as f:
         saved_data = json.load(f)
 
-    var = saved_data
-    return var
+    return saved_data
 
 
 def save_pickle(filename, folder, var):
@@ -150,11 +148,10 @@ def scaler_transform(data, scaler='standard'):
     from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
     # if data is one dimensional vector (1 feature), add a dimension
+    reshape_flag = False
     if len(data.shape) == 1:
-        reshape_flag = 1
+        reshape_flag = True
         data = data.reshape((-1, 1))
-    else:
-        reshape_flag = 0
 
     if scaler == 'standard':
         scaler = StandardScaler()

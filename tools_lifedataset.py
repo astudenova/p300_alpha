@@ -110,7 +110,7 @@ def create_erp_for_source_reconstruction(erp, decim=10):
     if len(erp_data.shape) != 3:
         raise ValueError('Input data should be epoched.')
 
-    (epochs, channels, times) = erp_data.shape
+    epochs, channels, times = erp_data.shape
     # check if first dimension is epochs
     if epochs != len(erp.events):
         epoch_dim = np.where(np.array(erp_data.shape) == len(erp.events))[0][0]
@@ -144,18 +144,16 @@ def read_rest(subj, marker):
     raw = read_raw_rest(subj)
     # read file with cleaned rest data (Cesnaite et al., 2021)
     cleaned = read_cleaned_rest(subj)
-    # read marker for the start of recording
-    new_start = marker
 
     # extract bad segments and bad channels for cleaned and apply it to raw
     if type(cleaned) == list:  # this subject doesn't have markers from cleaned data
         new_description = raw.annotations.description
-        new_onset = raw.annotations.onset + new_start
+        new_onset = raw.annotations.onset + marker
         new_duration = raw.annotations.duration
         sorted_idx = np.argsort(new_onset)
     else:
         new_description = np.hstack((raw.annotations.description, cleaned.annotations.description))
-        new_onset = np.hstack((raw.annotations.onset, cleaned.annotations.onset + new_start))
+        new_onset = np.hstack((raw.annotations.onset, cleaned.annotations.onset + marker))
         new_duration = np.hstack((raw.annotations.duration, cleaned.annotations.duration))
         sorted_idx = np.argsort(new_onset)
     # new annotations
@@ -184,7 +182,7 @@ def read_rest(subj, marker):
 
     # take first 10 min of the recording
     try:
-        raw.crop(tmin=new_start, tmax=new_start + 600)
+        raw.crop(tmin=marker, tmax=marker + 600)
     except:
         print('The file is too short. Taking all of it.')
 
@@ -360,7 +358,7 @@ def composite_attention(ids):
     impl_idx.append(list(np.where(tmta_time_all.reshape((-1)) == 997.)[0]))  # not applicable
     impl_idx.append(list(np.where(tmta_time_all.reshape((-1)) == 998.)[0]))  # do not know
     impl_idx.append(list(np.where(tmta_time_all.reshape((-1)) == 999.)[0]))  # refusal to answer
-    impl_idx = np.array([j for i in impl_idx for j in i])
+    impl_idx = np.array([j for idx in impl_idx for j in idx])
 
     # substitute implausible scores and nan values with averages
     if len(impl_idx) > 0:
@@ -454,7 +452,7 @@ def composite_executive(ids):
     impl_idx.append(list(np.where(tmtb_time_all.reshape((-1)) == 997.)[0]))  # not applicable
     impl_idx.append(list(np.where(tmtb_time_all.reshape((-1)) == 998.)[0]))  # do not know
     impl_idx.append(list(np.where(tmtb_time_all.reshape((-1)) == 999.)[0]))  # refusal to answer
-    impl_idx = np.array([j for i in impl_idx for j in i])
+    impl_idx = np.array([j for idx in impl_idx for j in idx])
 
     # substitute implausible scores and nan values with averages
     if len(impl_idx) > 0:
