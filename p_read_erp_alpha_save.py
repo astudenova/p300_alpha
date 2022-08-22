@@ -20,7 +20,6 @@ for i_subj, subj in enumerate(ids):
     erp_t_filt = filter_in_low_frequency(erp_t.get_data(picks='eeg'), fs, padlen=None)
     erp_s_filt = filter_in_low_frequency(erp_s.get_data(picks='eeg'), fs, padlen=None)
 
-
     # compute single-trial alpha amplitude envelope
     env_s = compute_envelope(erp_s.get_data(picks='eeg'), n_epoch=erp_s.events.shape[0],
                              n_ch=len(erp_s.ch_names) - 3, fs=fs, subtract=True)
@@ -64,3 +63,10 @@ env_t_all, _ = list_from_many(ids, dir_save, '_env_t', 'pickle')
 env_s_all, _ = list_from_many(ids, dir_save, '_env_s', 'pickle')
 corr_t_all, _ = list_from_many(ids, dir_save, '_corr_t', 'pickle')
 corr_s_all, _ = list_from_many(ids, dir_save, '_corr_s', 'pickle')
+
+save_pickle('avg_erp_t', dir_save, erp_t_all)
+save_pickle('avg_erp_s', dir_save, erp_s_all)
+save_pickle('avg_env_t', dir_save, env_t_all)
+save_pickle('avg_env_s', dir_save, env_s_all)
+save_pickle('corr_t', dir_save, corr_t_all)
+save_pickle('corr_s', dir_save, corr_s_all)

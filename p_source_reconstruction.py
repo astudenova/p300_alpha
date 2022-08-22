@@ -77,10 +77,10 @@ for i_subj, subj in enumerate(ids):
     stc_s_avg = np.mean(stc_s_filt, axis=0)
 
     # save
-    save_pickle(subj + '_t', dir_save, stc_t_avg)
-    save_pickle(subj + '_t_env', dir_save, stc_t_env_avg)
-    save_pickle(subj + '_s', dir_save, stc_s_avg)
-    save_pickle(subj + '_s_env', dir_save, stc_s_env_avg)
+    save_pickle(subj + '_t', op.join(dir_save, 'eL_p300_alpha'), stc_t_avg)
+    save_pickle(subj + '_t_env', op.join(dir_save, 'eL_p300_alpha'), stc_t_env_avg)
+    save_pickle(subj + '_s', op.join(dir_save, 'eL_p300_alpha'), stc_s_avg)
+    save_pickle(subj + '_s_env', op.join(dir_save, 'eL_p300_alpha'), stc_s_env_avg)
 
     print('ER and envelopes are saved.')
 
@@ -101,7 +101,7 @@ for i_subj, subj in enumerate(ids):
     corr_s = [pearsonr(erp_s_filt_flat[i], env_s_flat[i])[0] for i in range(n_source)]
     print('Correlation for standard is computed.')
 
-    save_json(subj + '_corr_t', dir_save, corr_t)
-    save_json(subj + '_corr_s', dir_save, corr_s)
+    save_json(subj + '_corr_t', op.join(dir_save, 'eL_p300_alpha'), corr_t)
+    save_json(subj + '_corr_s', op.join(dir_save, 'eL_p300_alpha'), corr_s)
 
     print('--------------' + str(i_subj) + ' ' + subj + ' is finished--------------------')

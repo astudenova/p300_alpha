@@ -3,7 +3,6 @@ This pipeline computes baseline-shift indices for sensor space.
 """
 import os
 import numpy as np
-
 from scipy.signal import welch
 from tools_general import load_json, save_pickle, list_from_many
 from tools_lifedataset import read_rest

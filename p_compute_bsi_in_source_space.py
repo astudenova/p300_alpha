@@ -46,6 +46,6 @@ for i_subj, subj in enumerate(ids):
     alpha_pk = np.mean(alpha_peaks[i_subj])
     for vi in range(n_vox):
         bsi_el[vi] = bsi(stc_el_data[vi], fs=stc_el.sfreq, alpha_peak=alpha_pk)
-    save_pickle(subj + '_bsi', dir_save, bsi_el)
+    save_pickle(subj + '_bsi', op.join(dir_save, 'eL_bsi'), bsi_el)
 
     print('--------------' + str(i_subj) + ' ' + subj + ' is finished--------------------')

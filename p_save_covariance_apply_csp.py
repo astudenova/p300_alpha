@@ -10,7 +10,7 @@ from tools_lifedataset import read_erp
 from tools_signal import from_epoch_to_cont, from_cont_to_epoch, apply_spatial_filter, \
     pk_latencies_amplitudes, filter_in_alpha_band
 
-dir_save = load_json('dirs_files',os.getcwd())['dir_save']
+dir_save = load_json('dirs_files', os.getcwd())['dir_save']
 ids = load_json('ids', os.getcwd())
 alpha_peaks = load_pickle('alpha_peaks', os.getcwd())
 
@@ -66,9 +66,9 @@ csp_filter = compute_ged(cov_mat_s_avg, cov_mat_t_avg)
 csp_pattern = compute_patterns(cov_mat_s_avg, csp_filter)
 save_pickle('csp_filter', os.getcwd(), csp_filter)
 save_pickle('csp_pattern', os.getcwd(), csp_pattern)
-#
-# csp_filter = load_pickle('csp_filter', os.getcwd())
-# csp_pattern = load_pickle('csp_pattern', os.getcwd())
+
+csp_filter = load_pickle('csp_filter', os.getcwd())[:, 0]
+csp_pattern = load_pickle('csp_pattern', os.getcwd())[:, 0]
 
 # Step 3. Apply csp on the data of each subject
 # to retrieve peak latency and peak amplitude of alpha amplitude
