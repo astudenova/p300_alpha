@@ -11,6 +11,8 @@ p_save_covariance_apply_csp.py - pipeline for computation of covariance matries 
 
 p_source_reconstruction.py - pipline for computation of saving ERs, alpha envelopes, and their trial-by-trial correlation in source space
 
+plot_simulated.py - pipeline for plotting using simulated data (without statistical assessment)
+
 plots.py - pipeline for plotting fig. 1-8
 
 simulations_fig_methods.py - simulates non-zero mean oscillations for figure in Methods section
@@ -27,3 +29,5 @@ tools_signal.py - functions for signal processing and data processing
 
 Anonymized data will be made available upon request through the application procedure carried out by the LIFE-Study administration 
 (https://www.uniklinikum-leipzig.de/einrichtungen/life).
+
+Simulated data of two participants can be downloaded from https://osf.io/ak5de/.
