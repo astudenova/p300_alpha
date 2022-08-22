@@ -371,7 +371,7 @@ plot_brain_views(data_to_plot, clim, 'bsi', cmap=parula_map())
 # FIGURE 7b
 # ----------------------------------------------
 
-bsi_corr = [pearsonr(stc_bsi[:, v], corr_p300_alpha[:, v])[0] for v in range(n_source)]
+bsi_corr = np.array([pearsonr(stc_bsi[:, v], corr_p300_alpha[:, v])[0] for v in range(n_source)])
 
 data_to_plot = bsi_corr
 clim = dict(kind='value',
