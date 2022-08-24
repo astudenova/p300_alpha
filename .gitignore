@@ -8,15 +8,11 @@ alpha_peaks_real
 csp_filter_real
 csp_pattern_real
 dirs_files
-erp_times
-erp_times_dec
 files_clean_rest_real
 files_erp_real
 files_rest_real
 full_mask_real
 ids_real
 markers_rest_real
-raw_info
 reject_spec
-stc_fixed
 p_create_sim.py

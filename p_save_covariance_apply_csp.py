@@ -5,12 +5,13 @@ import os
 import numpy as np
 from scipy.signal import hilbert
 from tools_external import compute_ged, compute_patterns
-from tools_general import save_pickle, load_pickle, load_json, list_from_many
+from tools_general import save_pickle, load_pickle, load_json, list_from_many, specify_dirs
 from tools_lifedataset import read_erp
 from tools_signal import from_epoch_to_cont, from_cont_to_epoch, apply_spatial_filter, \
     pk_latencies_amplitudes, filter_in_alpha_band
 
-dir_save = load_json('dirs_files', os.getcwd())['dir_save']
+dirs = specify_dirs()
+dir_save = dirs['dir_save']
 ids = load_json('ids', os.getcwd())
 alpha_peaks = load_pickle('alpha_peaks', os.getcwd())
 

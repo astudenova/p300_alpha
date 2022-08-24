@@ -8,17 +8,19 @@ import os.path as op
 import numpy as np
 import mne
 from scipy.stats import pearsonr
-from tools_general import load_json, load_pickle, save_pickle, save_json
+from tools_general import load_json, load_pickle, save_pickle, save_json, specify_dirs
 from tools_lifedataset import read_erp, create_erp_for_source_reconstruction
 from tools_signal import create_noise_cov, from_cont_to_epoch, compute_envelope, \
     from_epoch_to_cont, filter_in_low_frequency
 
-dir_save = load_json('dirs_files', os.getcwd())['dir_save']
+
+dirs = specify_dirs()
+dir_save = dirs['dir_save']
 ids = load_json('ids', os.getcwd())
 alpha_peaks = load_pickle('alpha_peaks', os.getcwd())
 
 # for dipole fitting
-subjects_dir = load_json('dirs_files', os.getcwd())['subjects_dir']
+subjects_dir = dirs['subjects_dir']
 subject = 'fsaverage'
 fwd_dir = op.join(subjects_dir, subject, 'bem', subject + '-oct6' + '-fwd.fif')
 forward = mne.read_forward_solution(fwd_dir)
