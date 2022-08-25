@@ -1,3 +1,4 @@
+python==3.6.9
 PyQt5==5.15.6
 PyQt5-Qt5==5.15.2
 autoreject==0.2.2
