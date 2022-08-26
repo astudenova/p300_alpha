@@ -1,7 +1,6 @@
 """
 Functions for input and output, and some statistics.
 """
-import os
 import os.path as op
 import json
 import pickle
@@ -179,17 +178,3 @@ def scale_to_zero_one(data):
     """
     data_scale = (data - np.min(data)) / (np.max(data) - np.min(data))
     return data_scale
-
-
-def specify_dirs():
-    """
-    Creates a dictionary with directories
-
-    :return: (dict) : directories to use
-    """
-
-    dir_save = input('Enter the directory for saving the derivatives: ')
-    dir_derr = input('Enter the directory where derivatives are: ')
-    subject_dir = input('Enter the directory with data of the average subject for source reconstruction: ')
-
-    return {"dir_derr": dir_derr, "dir_save": dir_save, "subjects_dir": subject_dir}

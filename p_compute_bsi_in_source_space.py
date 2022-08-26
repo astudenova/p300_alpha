@@ -5,18 +5,17 @@ import os
 import os.path as op
 import mne
 import numpy as np
-from tools_general import load_json, save_pickle, load_pickle, specify_dirs
+from tools_general import load_json, save_pickle, load_pickle
 from tools_lifedataset import read_rest, create_raw_for_source_reconstruction
 from tools_signal import bsi, create_noise_cov
 
-dirs = specify_dirs()
-dir_save = dirs['dir_save']
+dir_save = load_json('dirs_files', os.getcwd())['dir_save']
 ids = load_json('ids', os.getcwd())
 alpha_peaks = load_pickle('alpha_peaks', os.getcwd())
 markers_rest = load_json('markers_rest', os.getcwd())
 
 # folders for source reconstruction
-subjects_dir = dirs['subjects_dir']
+subjects_dir = load_json('dirs_files', os.getcwd())['subjects_dir']
 subject = 'fsaverage'
 fwd_dir = op.join(subjects_dir, subject, 'bem', subject + '-oct6' + '-fwd.fif')
 

@@ -6,16 +6,15 @@ import os.path as op
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-from tools_general import list_from_many, load_json_to_numpy, load_pickle, load_json, specify_dirs
+from tools_general import list_from_many, load_json_to_numpy, load_pickle, load_json
 from tools_plotting import plot_with_sem_one_line, topoplot_with_colorbar, parula_map, \
     parula_map_backward, plot_brain_views
 from tools_signal import pk_latencies_amplitudes, lda_
 
 mpl.use("Qt5Agg")
 
-dirs = specify_dirs()
 dir_codes = os.getcwd()
-dir_derr = dirs['dir_save']
+dir_derr = load_json('dirs_files', os.getcwd())['dir_save']
 erp_times = np.array(load_json('erp_times', dir_codes))
 raw_info = load_pickle('raw_info', dir_codes)
 ids = load_json('ids', dir_codes)
@@ -24,7 +23,7 @@ num_subj = len(ids)
 n_ch = 31
 
 # for source reconstruction
-subjects_dir = dirs['subjects_dir']
+subjects_dir = load_json('dirs_files', os.getcwd())['subjects_dir']
 subject = 'fsaverage'
 
 erp_times_dec = load_json_to_numpy('erp_times_dec', dir_codes)

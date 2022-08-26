@@ -5,12 +5,11 @@ and correlation between ER and alpha envelope.
 import os
 import numpy as np
 from scipy.stats import pearsonr
-from tools_general import load_json, save_pickle, list_from_many, specify_dirs
+from tools_general import load_json, save_pickle, list_from_many
 from tools_signal import compute_envelope, from_epoch_to_cont, filter_in_low_frequency
 from tools_lifedataset import read_erp
 
-dirs = specify_dirs()
-dir_save = dirs['dir_save']
+dir_save = load_json('dirs_files', os.getcwd())['dir_save']
 ids = load_json('ids', os.getcwd())
 
 for i_subj, subj in enumerate(ids):
