@@ -9,12 +9,13 @@ from tools_general import load_json, save_pickle, list_from_many
 from tools_signal import compute_envelope, from_epoch_to_cont, filter_in_low_frequency
 from tools_lifedataset import read_erp
 
-dir_save = load_json('dirs_files', os.getcwd())['dir_save']
-ids = load_json('ids', os.getcwd())
+dir_save = load_json('settings/dirs_files', os.getcwd())['dir_save']
+dir_data = load_json('settings/dirs_files', os.getcwd())['dir_data']
+ids = load_json('settings/ids', os.getcwd())
 
 for i_subj, subj in enumerate(ids):
     # read ERs
-    erp_s, erp_t, _ = read_erp(subj, decim=1, notch=True)
+    erp_s, erp_t, _ = read_erp(subj, dir_data, decim=1, notch=True)
     # low-pass the ER
     fs = erp_t.info['sfreq']
     erp_t_filt = filter_in_low_frequency(erp_t.get_data(picks='eeg'), fs, padlen=None)

@@ -22,8 +22,8 @@ from tools_signal import pk_latencies_amplitudes, apply_spatial_filter, lda_
 mpl.use("Qt5Agg")
 
 dir_codes = os.getcwd()
-dir_derr = load_json('dirs_files', os.getcwd())['dir_derr']
-ids_all = load_json('ids_real', dir_codes)
+dir_derr = load_json('settings/dirs_files', os.getcwd())['dir_derr']
+ids_all = load_json('settings_real/ids_real', dir_codes)
 erp_times = np.array(load_json('erp_times', dir_codes))
 raw_info = load_pickle('raw_info', dir_codes)
 reject_spec = load_json('reject_spec', dir_codes)
@@ -37,7 +37,7 @@ age, age_ids = read_age(ids)
 gender, _ = read_gender(ids)
 
 # for source reconstruction
-subjects_dir = load_json('dirs_files', os.getcwd())['subjects_dir']
+subjects_dir = load_json('settings/dirs_files', os.getcwd())['subjects_dir']
 subject = 'fsaverage'
 
 erp_times_dec = load_json_to_numpy('erp_times_dec', dir_codes)

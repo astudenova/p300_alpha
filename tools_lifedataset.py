@@ -8,13 +8,14 @@ import pandas as pd
 from tools_general import load_json
 
 
-def read_erp(subj, decim=1, notch=False, h_freq=45):
+def read_erp(subj, dir_data, decim=1, notch=False, h_freq=45):
     """
     Read the data from stimulus based recordings
 
     Adapted from Denis Engemann <denis.engemann@gmail.com>
 
     :param str subj: id of a participant
+    :param str dir_data: directory with data files
     :param int decim: decimation factor, default decim = 1 (no decimation)
     :param bool notch: application of the notch filter around 50 Hz, default = False
     :param int h_freq: frequency of cut-off, default = 45 Hz
@@ -24,8 +25,8 @@ def read_erp(subj, decim=1, notch=False, h_freq=45):
     from tools_external import _get_global_reject_epochs
     from tools_signal import project_eog
 
-    files_erp = load_json('files_erp', os.getcwd())
-    data_erp_file = files_erp[subj]
+    files_erp = load_json('settings/files_erp', os.getcwd())
+    data_erp_file = dir_data + files_erp[subj]
     erp = mne.io.read_raw_brainvision(data_erp_file, eog=['VEOG', 'HEOG'], misc=['EKG'])
 
     # add montage
@@ -131,19 +132,20 @@ def create_erp_for_source_reconstruction(erp, decim=10):
     return evoked_erp
 
 
-def read_rest(subj, marker):
+def read_rest(subj, dir_data, marker):
     """
     Read the data from resting-state recordings
 
     :param str subj: id of a subject
+    :param str dir_data: directory with data files
     :param float marker: value of starting point
     :returns: raw (mne.Raw) - preprocessed resting-state data
     """
 
     # read file with raw rest data
-    raw = read_raw_rest(subj)
+    raw = read_raw_rest(subj, dir_data)
     # read file with cleaned rest data (Cesnaite et al., 2021)
-    cleaned = read_cleaned_rest(subj)
+    cleaned = read_cleaned_rest(subj, dir_data)
 
     # extract bad segments and bad channels for cleaned and apply it to raw
     if type(cleaned) == list:  # this subject doesn't have markers from cleaned data
@@ -189,17 +191,18 @@ def read_rest(subj, marker):
     return raw
 
 
-def read_raw_rest(subj):
+def read_raw_rest(subj, dir_data):
     """
     Read the data from rest recordings
 
     :param str subj: id of a participant
+    :param str dir_data: directory with data files
     :returns: raw (mne.Raw) - Raw instance with rest signals
     """
 
-    files_rest = load_json('files_rest', os.getcwd())
+    files_rest = load_json('settings/files_rest', os.getcwd())
 
-    data_raw_file = files_rest[subj]
+    data_raw_file = dir_data + files_rest[subj]
     raw = mne.io.read_raw_brainvision(data_raw_file, eog=['VEOG', 'HEOG'], misc=['EKG'])
 
     # read montage and apply
@@ -212,17 +215,18 @@ def read_raw_rest(subj):
     return raw
 
 
-def read_cleaned_rest(subj):
+def read_cleaned_rest(subj, dir_data):
     """
     Read the data from rest recordings
 
     :param str subj: id of a participant
+    :param str dir_data: directory with data files
     :returns: cleaned (mne.Raw) - Raw instance with rest signals
     """
 
-    files_cleaned_rest = load_json('files_clean_rest', os.getcwd())
+    files_cleaned_rest = load_json('settings/files_clean_rest', os.getcwd())
     try:
-        data_cleaned_file = files_cleaned_rest[subj]
+        data_cleaned_file = dir_data + files_cleaned_rest[subj]
         cleaned = mne.io.read_raw_eeglab(data_cleaned_file, preload=True)
         # set average reference
         cleaned.set_eeg_reference()
@@ -242,7 +246,7 @@ def read_age(ids):
         ids_age (numpy.ndarray, 1D) - ids of those subjects for whom age is available
     """
 
-    age_data = pd.read_excel(load_json('dirs_files', os.getcwd())['file_age'],
+    age_data = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_age'],
                              engine='openpyxl')
     ids_age_all = age_data['TEILNEHMER_SIC'].to_numpy()
     age_all = age_data['ageEEG'].to_numpy()
@@ -263,7 +267,7 @@ def read_gender(ids):
         ids_gender (numpy.ndarray, 1D) - ids of those subjects for whom gender is available
     """
 
-    gender_data = pd.read_excel(load_json('dirs_files',os.getcwd())['file_gender'],
+    gender_data = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_gender'],
                                 engine='openpyxl')
     ids_gender_all = gender_data['TEILNEHMER_SIC'].to_numpy()
     gender_all = gender_data['TEILNEHMER_GESCHLECHTEEG'].to_numpy()
@@ -286,7 +290,7 @@ def read_cerad(ids):
         cerad_ids (numpy.ndarray, 1D) - ids of those subjects for whom scores were available
     """
 
-    file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_cerad'], engine='openpyxl')
+    file = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_cerad'], engine='openpyxl')
     file = file.fillna(0)  # fills nan values with zeros
 
     # selects columns for Retrieve word list task
@@ -346,7 +350,7 @@ def composite_attention(ids):
     from tools_general import scaler_transform
 
     # TMT-A
-    file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_tmt'], engine='openpyxl',
+    file = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_tmt'], engine='openpyxl',
                          na_values=np.nan)
 
     # extract values and ids from the file
@@ -373,7 +377,7 @@ def composite_attention(ids):
     tmta_time = tmta_time_all[idx2].reshape((-1))  # the smaller, the better
 
     # Stroop neutral
-    file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_stroop'], engine='openpyxl',
+    file = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_stroop'], engine='openpyxl',
                          na_values=np.nan)
 
     # extract values and ids from the file
@@ -442,7 +446,7 @@ def composite_executive(ids):
     from tools_general import scaler_transform
 
     # TMT-B
-    file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_tmt'], engine='openpyxl')
+    file = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_tmt'], engine='openpyxl')
     # extract values and ids from the file
     tmtb_time_all = file[['TMT_TIMEB']].to_numpy()
     tmt_ids_all = file['TMT_SIC'].to_numpy()
@@ -467,7 +471,7 @@ def composite_executive(ids):
     tmtb_time = tmtb_time_all[idx2]
 
     # Stroop incongruent
-    file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_stroop'], engine='openpyxl')
+    file = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_stroop'], engine='openpyxl')
     # extract values and ids from the file
     stroop_in_all = file[['STROOP_RO_RT_INKON']].to_numpy()
     stroop_all_ids = file['STROOP_RO_SIC'].to_numpy()
@@ -509,7 +513,7 @@ def read_medications(ids):
     """
 
     # read file with medications
-    file = pd.read_excel(load_json('dirs_files',os.getcwd())['file_meds'], engine='openpyxl')
+    file = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_meds'], engine='openpyxl')
     # columns to read
     meds_clms = file[['EEG_SUBSTANZ_I06B_1A', 'EEG_SUBSTANZ_I06B_2A', 'EEG_SUBSTANZ_I06B_3A',
                       'EEG_SUBSTANZ_I06B_4A', 'EEG_SUBSTANZ_I06B_5A', 'EEG_SUBSTANZ_I06B_6A',

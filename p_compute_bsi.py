@@ -8,13 +8,14 @@ from tools_general import load_json, save_pickle, list_from_many
 from tools_lifedataset import read_rest
 from tools_signal import peak_in_spectrum, bsi
 
-dir_save = load_json('dirs_files', os.getcwd())['dir_save']
-ids = load_json('ids', os.getcwd())
-markers_rest = load_json('markers_rest', os.getcwd())
+dir_save = load_json('settings/dirs_files', os.getcwd())['dir_save']
+dir_data = load_json('settings/dirs_files', os.getcwd())['dir_data']
+ids = load_json('settings/ids', os.getcwd())
+markers_rest = load_json('settings/markers_rest', os.getcwd())
 
 for i_subj, subj in enumerate(ids):
 
-    raw = read_rest(subj, markers_rest[subj])
+    raw = read_rest(subj, dir_data, markers_rest[subj])
 
     fs = raw.info['sfreq']
     n_ch = len(raw.ch_names) - 3

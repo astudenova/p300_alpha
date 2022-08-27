@@ -10,14 +10,15 @@ from tools_lifedataset import read_erp
 from tools_signal import from_epoch_to_cont, from_cont_to_epoch, apply_spatial_filter, \
     pk_latencies_amplitudes, filter_in_alpha_band
 
-dir_save = load_json('dirs_files', os.getcwd())['dir_save']
-ids = load_json('ids', os.getcwd())
-alpha_peaks = load_pickle('alpha_peaks', os.getcwd())
+dir_save = load_json('settings/dirs_files', os.getcwd())['dir_save']
+dir_data = load_json('settings/dirs_files', os.getcwd())['dir_data']
+ids = load_json('settings/ids', os.getcwd())
+alpha_peaks = load_pickle('settings/alpha_peaks', os.getcwd())
 
 # Step 1. Save covariances
 for i_subj, subj in enumerate(ids):
 
-    erp_s, erp_t, _ = read_erp(subj, decim=1, notch=True)
+    erp_s, erp_t, _ = read_erp(subj, dir_data, decim=1, notch=True)
 
     fs = erp_t.info['sfreq']
     erp_times = erp_t.times
@@ -58,7 +59,7 @@ cov_t_all, _ = list_from_many(ids, dir_save, '_cov_t', 'pickle')
 cov_s_all, _ = list_from_many(ids, dir_save, '_cov_s', 'pickle')
 
 # compute csp only for selected subjects
-full_mask = load_pickle('full_mask', os.getcwd())
+full_mask = load_pickle('settings/full_mask', os.getcwd())
 cov_mat_t_avg = np.mean(cov_t_all[full_mask], axis=0)  # average over subjects
 cov_mat_s_avg = np.mean(cov_s_all[full_mask], axis=0)
 
@@ -73,7 +74,7 @@ csp_pattern = load_pickle('csp_pattern', os.getcwd())[:, 0]
 # Step 3. Apply csp on the data of each subject
 # to retrieve peak latency and peak amplitude of alpha amplitude
 for i_subj, subj in enumerate(ids):
-    _, erp_t, _ = read_erp(subj, decim=1, notch=True)
+    _, erp_t, _ = read_erp(subj, dir_data, decim=1, notch=True)
 
     fs = erp_t.info['sfreq']
     erp_times = erp_t.times
