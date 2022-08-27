@@ -320,7 +320,7 @@ def plot_brain_views(data, clim, filename, cmap='bone'):
     """
     from tools_general import load_pickle
 
-    stc_fixed = load_pickle('stc_fixed', os.getcwd())
+    stc_fixed = load_pickle('stc_fixed.pkl', os.getcwd())
     stc_plot = stc_fixed.copy().crop(tmin=0, tmax=0)
     stc_plot._data = data
     tmp = stc_plot.copy().plot(hemi='rh', size=(500, 500), clim=clim, colormap=cmap,

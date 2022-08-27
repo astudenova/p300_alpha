@@ -22,11 +22,11 @@ from tools_signal import pk_latencies_amplitudes, apply_spatial_filter, lda_
 mpl.use("Qt5Agg")
 
 dir_codes = os.getcwd()
-dir_derr = load_json('settings_real/dirs_files', os.getcwd())['dir_derr']
+dir_derr = load_json('settings_real/dirs_files.json', os.getcwd())['dir_derr']
 ids_all = load_json('settings_real/ids_real', dir_codes)
-erp_times = np.array(load_json('erp_times', dir_codes))
-raw_info = load_pickle('raw_info', dir_codes)
-reject_spec = load_json('reject_spec', dir_codes)
+erp_times = np.array(load_json('erp_times.json', dir_codes))
+raw_info = load_pickle('raw_info.pkl', dir_codes)
+reject_spec = load_json('reject_spec.json', dir_codes)
 meds_ids, _ = read_medications(ids_all)
 reject_ids = list(set(reject_spec + list(meds_ids)))
 id_mask = np.intersect1d(ids_all, reject_ids, return_indices=True)[1]
@@ -37,11 +37,11 @@ age, age_ids = read_age(ids)
 gender, _ = read_gender(ids)
 
 # for source reconstruction
-subjects_dir = load_json('settings_real/dirs_files', os.getcwd())['subjects_dir']
+subjects_dir = load_json('settings_real/dirs_files.json', os.getcwd())['subjects_dir']
 subject = 'fsaverage'
 
-erp_times_dec = load_json_to_numpy('erp_times_dec', dir_codes)
-stc_fixed = load_pickle('stc_fixed', dir_codes)
+erp_times_dec = load_json_to_numpy('erp_times_dec.json', dir_codes)
+stc_fixed = load_pickle('stc_fixed.pkl', dir_codes)
 
 full_mask = np.logical_not(np.in1d(np.arange(0, len(ids_all)), id_mask))
 avg_erp_t = load_pickle('avg_erp_t', dir_derr)[full_mask]
@@ -205,7 +205,7 @@ for patch in patches:
 # FIGURE 4b
 # -----------------------------------------------------------------
 
-sen_sorted = load_json('sen_sorted_idx', dir_codes)
+sen_sorted = load_json('sen_sorted_idx.json', dir_codes)
 # make bins for each channel
 idx_bin = np.zeros((n_ch, 5, len(ids)), dtype=bool)
 for ch in range(n_ch):
@@ -406,8 +406,8 @@ for i_subj, subj in enumerate(ids):
 # FIGURE 8c
 # ----------------------------------------------------
 
-csp_filter = load_pickle('csp_filter_real', os.getcwd())
-csp_pattern = load_pickle('csp_pattern_real', os.getcwd())
+csp_filter = load_pickle('csp_filter_real.pkl', os.getcwd())
+csp_pattern = load_pickle('csp_pattern_real.pkl', os.getcwd())
 
 topoplot_with_colorbar(csp_pattern[:, 0], raw_info, cmap=parula_map())
 

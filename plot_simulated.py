@@ -14,20 +14,20 @@ from tools_signal import pk_latencies_amplitudes, lda_
 mpl.use("Qt5Agg")
 
 dir_codes = os.getcwd()
-dir_derr = load_json('settings/dirs_files', os.getcwd())['dir_save']
-erp_times = np.array(load_json('erp_times', dir_codes))
-raw_info = load_pickle('raw_info', dir_codes)
-ids = load_json('settings/ids', dir_codes)
-full_mask = load_pickle('settings/full_mask', dir_codes)
+dir_derr = load_json('settings/dirs_files.json', os.getcwd())['dir_save']
+erp_times = np.array(load_json('erp_times.json', dir_codes))
+raw_info = load_pickle('raw_info.pkl', dir_codes)
+ids = load_json('settings/ids.json', dir_codes)
+full_mask = load_pickle('settings/full_mask.pkl', dir_codes)
 num_subj = len(ids)
 n_ch = 31
 
 # for source reconstruction
-subjects_dir = load_json('settings/dirs_files', os.getcwd())['subjects_dir']
+subjects_dir = load_json('settings/dirs_files.json', os.getcwd())['subjects_dir']
 subject = 'fsaverage'
 
-erp_times_dec = load_json_to_numpy('erp_times_dec', dir_codes)
-stc_fixed = load_pickle('stc_fixed', dir_codes)
+erp_times_dec = load_json_to_numpy('erp_times_dec.json', dir_codes)
+stc_fixed = load_pickle('stc_fixed.pkl', dir_codes)
 
 avg_erp_t = load_pickle('avg_erp_t', dir_derr)[full_mask]
 avg_erp_s = load_pickle('avg_erp_s', dir_derr)[full_mask]

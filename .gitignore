@@ -5,7 +5,7 @@ test/
 settings_real/
 .gitignore
 .coverage
-csp_filter_real
-csp_pattern_real
-reject_spec
+csp_filter_real.pkl
+csp_pattern_real.pkl
+reject_spec.json
 p_create_sim.py
