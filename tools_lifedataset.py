@@ -246,7 +246,7 @@ def read_age(ids):
         ids_age (numpy.ndarray, 1D) - ids of those subjects for whom age is available
     """
 
-    age_data = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_age'],
+    age_data = pd.read_excel(load_json('settings_real/dirs_files', os.getcwd())['file_age'],
                              engine='openpyxl')
     ids_age_all = age_data['TEILNEHMER_SIC'].to_numpy()
     age_all = age_data['ageEEG'].to_numpy()
@@ -267,7 +267,7 @@ def read_gender(ids):
         ids_gender (numpy.ndarray, 1D) - ids of those subjects for whom gender is available
     """
 
-    gender_data = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_gender'],
+    gender_data = pd.read_excel(load_json('settings_real/dirs_files', os.getcwd())['file_gender'],
                                 engine='openpyxl')
     ids_gender_all = gender_data['TEILNEHMER_SIC'].to_numpy()
     gender_all = gender_data['TEILNEHMER_GESCHLECHTEEG'].to_numpy()
@@ -290,7 +290,7 @@ def read_cerad(ids):
         cerad_ids (numpy.ndarray, 1D) - ids of those subjects for whom scores were available
     """
 
-    file = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_cerad'], engine='openpyxl')
+    file = pd.read_excel(load_json('settings_real/dirs_files', os.getcwd())['file_cerad'], engine='openpyxl')
     file = file.fillna(0)  # fills nan values with zeros
 
     # selects columns for Retrieve word list task
@@ -350,7 +350,7 @@ def composite_attention(ids):
     from tools_general import scaler_transform
 
     # TMT-A
-    file = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_tmt'], engine='openpyxl',
+    file = pd.read_excel(load_json('settings_real/dirs_files', os.getcwd())['file_tmt'], engine='openpyxl',
                          na_values=np.nan)
 
     # extract values and ids from the file
@@ -377,7 +377,7 @@ def composite_attention(ids):
     tmta_time = tmta_time_all[idx2].reshape((-1))  # the smaller, the better
 
     # Stroop neutral
-    file = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_stroop'], engine='openpyxl',
+    file = pd.read_excel(load_json('settings_real/dirs_files', os.getcwd())['file_stroop'], engine='openpyxl',
                          na_values=np.nan)
 
     # extract values and ids from the file
@@ -446,7 +446,7 @@ def composite_executive(ids):
     from tools_general import scaler_transform
 
     # TMT-B
-    file = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_tmt'], engine='openpyxl')
+    file = pd.read_excel(load_json('settings_real/dirs_files', os.getcwd())['file_tmt'], engine='openpyxl')
     # extract values and ids from the file
     tmtb_time_all = file[['TMT_TIMEB']].to_numpy()
     tmt_ids_all = file['TMT_SIC'].to_numpy()
@@ -471,7 +471,7 @@ def composite_executive(ids):
     tmtb_time = tmtb_time_all[idx2]
 
     # Stroop incongruent
-    file = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_stroop'], engine='openpyxl')
+    file = pd.read_excel(load_json('settings_real/dirs_files', os.getcwd())['file_stroop'], engine='openpyxl')
     # extract values and ids from the file
     stroop_in_all = file[['STROOP_RO_RT_INKON']].to_numpy()
     stroop_all_ids = file['STROOP_RO_SIC'].to_numpy()
@@ -513,7 +513,7 @@ def read_medications(ids):
     """
 
     # read file with medications
-    file = pd.read_excel(load_json('settings/dirs_files', os.getcwd())['file_meds'], engine='openpyxl')
+    file = pd.read_excel(load_json('settings_real/dirs_files', os.getcwd())['file_meds'], engine='openpyxl')
     # columns to read
     meds_clms = file[['EEG_SUBSTANZ_I06B_1A', 'EEG_SUBSTANZ_I06B_2A', 'EEG_SUBSTANZ_I06B_3A',
                       'EEG_SUBSTANZ_I06B_4A', 'EEG_SUBSTANZ_I06B_5A', 'EEG_SUBSTANZ_I06B_6A',
