@@ -36,4 +36,8 @@ tools_signal.py - functions for signal processing and data processing
 Anonymized data will be made available upon request through the application procedure carried out by the LIFE-Study administration 
 (https://www.uniklinikum-leipzig.de/einrichtungen/life).
 
+----------------------------
+
 Simulated data of two participants can be downloaded from https://osf.io/ak5de/.
+
+To run pipelines using simulated data, the directories should be adjusted in settings/dir_files.
