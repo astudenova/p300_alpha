@@ -44,6 +44,7 @@ erp_times_dec = load_json_to_numpy('erp_times_dec.json', dir_codes)
 stc_fixed = load_pickle('stc_fixed.pkl', dir_codes)
 
 full_mask = np.logical_not(np.in1d(np.arange(0, len(ids_all)), id_mask))
+# These files are generated with the script p_read_erp_alpha_save.py
 avg_erp_t = load_pickle('avg_erp_t', dir_derr)[full_mask]
 avg_erp_s = load_pickle('avg_erp_s', dir_derr)[full_mask]
 avg_env_t = load_pickle('avg_env_t', dir_derr)[full_mask]
@@ -51,9 +52,9 @@ avg_env_s = load_pickle('avg_env_s', dir_derr)[full_mask]
 
 pz_idx = np.where(np.array(raw_info.ch_names) == 'Pz')[0][0]
 
-# -----------------------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 1a
-# -----------------------------------------------------------
+# ---------------------------------------------------------------
 
 fig, ax = plt.subplots(1, 2, sharex=True)
 ax = ax.flatten()
@@ -70,10 +71,11 @@ plot_with_sem_one_line(erp_times, avg_env_s[:, pz_idx, :], ax, 1, xlim=[-0.2, 1.
                        ylim=[1 * 10 ** (-6), 4.5 * 10 ** (-6)],
                        color_y='tan', color_y_sem='antiquewhite', label_y='standard')
 
-# -----------------------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 1b
-# -----------------------------------------------------------
+# ---------------------------------------------------------------
 
+# These files are generated with the script p_read_erp_alpha_save.py
 corr_t = load_pickle('corr_t', dir_derr)[full_mask]
 corr_s = load_pickle('corr_s', dir_derr)[full_mask]
 t_stat = [ttest_rel(corr_t[:, i], corr_s[:, i])[0] for i in range(n_ch)]
@@ -84,7 +86,7 @@ topoplot_with_colorbar(t_stat, raw_info, cmap=parula_map(),
 
 # ---------------------------------------------------------------
 # FIGURE 2
-# _______________________________________________________________
+# ---------------------------------------------------------------
 
 erp_peaks_avg = []
 for i_subj, subj in enumerate(ids):
@@ -114,10 +116,11 @@ topoplot_with_colorbar(np.mean(erp_topo_avg - noerp_topo_avg, axis=0),
 topoplot_with_colorbar(np.mean(env_topo_avg / noenv_topo_avg, axis=0),
                        raw_info, cmap=parula_map(), vmin=0.55, vmax=0.80)
 
-# -----------------------------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 3a
-# -----------------------------------------------------------------
+# ---------------------------------------------------------------
 
+# This file is generated with the script p_compute_bsi.py
 bsi_all = load_pickle('bsi_all', dir_derr)[full_mask]
 bsi_mean = np.mean(bsi_all, axis=0)
 topoplot_with_colorbar(bsi_mean, raw_info, cmap=parula_map())
@@ -129,9 +132,9 @@ for ch in range(n_ch):
     mode_index = np.argmax(n)
     bsi_mode[ch] = (bins[mode_index] + bins[mode_index + 1]) / 2
 
-# -----------------------------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 3b
-# -----------------------------------------------------------------
+# ---------------------------------------------------------------
 
 plt.hist(bsi_all[:, pz_idx], bins=50, color='dodgerblue')
 plt.axvline(bsi_mean[pz_idx], color='k', linestyle='dotted', linewidth=3, label='mean')
@@ -140,9 +143,9 @@ plt.legend()
 plt.xlabel('BSI')
 plt.title('BSI at Pz')
 
-# -----------------------------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 3c
-# -----------------------------------------------------------------
+# ---------------------------------------------------------------
 
 corr_bsi_corr_t = np.zeros((n_ch,))
 pval_bsi_corr_t = np.zeros((n_ch,))
@@ -154,9 +157,9 @@ for ch in range(n_ch):
 topoplot_with_colorbar(corr_bsi_corr_t, raw_info=raw_info,
                        cmap=parula_map(), mask=pval_bsi_corr_t < 0.0001 / n_ch)
 
-# -----------------------------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 4a
-# -----------------------------------------------------------------
+# ---------------------------------------------------------------
 
 color_bins = ['#00406B', '#104E8B', '#1874CD', '#1C86EE', '#1EA1FF']
 bsi_bins = np.percentile(np.sort(bsi_all[:, pz_idx]), np.arange(0, 100, 20))
@@ -201,9 +204,9 @@ for patch in patches:
     elif patch.xy[0] < np.float(bsi_color[0, 4]):
         patch.set_facecolor(bsi_color[1, 4])
 
-# -----------------------------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 4b
-# -----------------------------------------------------------------
+# ---------------------------------------------------------------
 
 sen_sorted = load_json('sen_sorted_idx.json', dir_codes)
 # make bins for each channel
@@ -263,12 +266,13 @@ ch_mask[ch_inds] = True
 topoplot_with_colorbar(F_obs[t500], raw_info=raw_info,
                        cmap=parula_map(), mask=ch_mask, vmin=np.min(F_obs), vmax=np.max(F_obs))
 
-# ----------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 5
-# ----------------------------------------------
+# ---------------------------------------------------------------
 
 n_source = 8196
 thr_source = t.ppf(q=1 - 10 ** (-4) / n_source / 2, df=num_subj - 1)
+# These files are generated with the script p_source_reconstruction.py
 corr_p300_alpha, _ = list_from_many(ids, op.join(dir_derr, 'eL_p300_alpha'), '_corr_t')
 corr_nop300_alpha, _ = list_from_many(ids, op.join(dir_derr, 'eL_p300_alpha'), '_corr_s')
 t_stat_t_s = np.zeros((n_source,))
@@ -289,18 +293,19 @@ clim = dict(kind='value',
             lims=[-1 * np.nanmax(np.abs(data_to_plot)), 0, 1 * np.nanmax(np.abs(data_to_plot))])
 plot_brain_views(data_to_plot, clim, 'corr_mask', cmap=parula_map())
 
-# ----------------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 6
-# ----------------------------------------------------
+# ---------------------------------------------------------------
 
+# These files are generated with the script p_source_reconstruction.py
 stc_p300, _ = list_from_many(ids, op.join(dir_derr, 'eL_p300_alpha'), '_t', 'pickle')
 stc_p300_alpha_env, _ = list_from_many(ids, op.join(dir_derr, 'eL_p300_alpha'), '_t_env', 'pickle')
 stc_nop300, _ = list_from_many(ids, op.join(dir_derr, 'eL_p300_alpha'), '_s', 'pickle')
 stc_nop300_alpha_env, _ = list_from_many(ids, op.join(dir_derr, 'eL_p300_alpha'), '_s_env', 'pickle')
 
-# ----------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 6a
-# ----------------------------------------------
+# ---------------------------------------------------------------
 
 win = np.array([0.3, 0.7])
 win_samples = np.array([np.argmin(np.abs(erp_times_dec - win[0])),
@@ -323,9 +328,9 @@ data_to_plot = np.multiply(X_avg_diff, np.array(t_vox) > thr_source)
 clim = dict(kind='value', lims=[np.min(X_avg_diff), np.mean(X_avg_diff), np.max(X_avg_diff)])
 plot_brain_views(data_to_plot, clim, 'p300', cmap=parula_map())
 
-# ----------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 6b
-# ----------------------------------------------
+# ---------------------------------------------------------------
 
 X1 = np.transpose(
     np.mean(stc_nop300_alpha_env[:, :, win_samples[0]:win_samples[1]], axis=2).reshape(
@@ -353,11 +358,11 @@ data_to_plot = cluster_bool
 clim = dict(kind='value', lims=[0, np.mean(data_to_plot), np.max(data_to_plot)])
 plot_brain_views(data_to_plot, clim, 'cluster')
 
-# ----------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 7a
-# ----------------------------------------------
+# ---------------------------------------------------------------
 
-# BSI
+# These files are generated with the script p_compute_bsi_in_source_space.py
 stc_bsi, _ = list_from_many(ids, op.join(dir_derr, 'eL_bsi'), '_bsi', 'pickle')
 stc_bsi_cluster = np.multiply(stc_bsi, cluster_bool)
 stc_bsi_avg = np.mean(stc_bsi, axis=0)
@@ -367,9 +372,9 @@ clim = dict(kind='value',
             lims=[-1 * np.nanmax(np.abs(data_to_plot)), 0, 1 * np.nanmax(np.abs(data_to_plot))])
 plot_brain_views(data_to_plot, clim, 'bsi', cmap=parula_map())
 
-# ----------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 7b
-# ----------------------------------------------
+# ---------------------------------------------------------------
 
 bsi_corr = np.array([pearsonr(stc_bsi[:, v], corr_p300_alpha[:, v])[0] for v in range(n_source)])
 
@@ -378,12 +383,11 @@ clim = dict(kind='value',
             lims=[np.min(data_to_plot), np.mean(data_to_plot), np.max(data_to_plot)])
 plot_brain_views(data_to_plot, clim, 'bsi_corr', cmap=parula_map())
 
-# ----------------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 8
-# ----------------------------------------------------
-# ----------------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 8b
-# ----------------------------------------------------
+# ---------------------------------------------------------------
 
 lda_filter, lda_pattern = lda_(avg_erp_t[:, :n_ch], avg_erp_s[:, :n_ch], [0.3, 0.7], erp_times)
 save_pickle('lda_filter', dir_derr, lda_filter)
@@ -402,23 +406,25 @@ for i_subj, subj in enumerate(ids):
     lda_erp_peak_lat[i_subj] = erp_t_peak[0]
     lda_erp_peak_amp[i_subj] = erp_t_peak[1]
 
-# ----------------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 8c
-# ----------------------------------------------------
+# ---------------------------------------------------------------
 
+# These files are generated with the script p_save_covariance_apply_csp.py
 csp_filter = load_pickle('csp_filter_real.pkl', os.getcwd())
 csp_pattern = load_pickle('csp_pattern_real.pkl', os.getcwd())
 
 topoplot_with_colorbar(csp_pattern[:, 0], raw_info, cmap=parula_map())
 
-# ----------------------------------------------------
+# ---------------------------------------------------------------
 # FIGURE 8a
-# ----------------------------------------------------
+# ---------------------------------------------------------------
 
 attention_comp, attention_ids = composite_attention(ids)
 memory_comp, memory_ids = composite_memory(ids)
 executive_comp, executive_ids = composite_executive(ids)
 
+# These files are generated with the script p_save_covariance_apply_csp.py
 csp_env_peak_lat = load_pickle('csp_env_peak_lat', dir_derr)
 csp_env_peak_amp = load_pickle('csp_env_peak_amp_', dir_derr)
 
@@ -468,13 +474,13 @@ annotated_heatmap(var_to_corr[:4], var_to_corr[5:], np.round(corr_par[:4, 5:], 2
 annotated_heatmap(var_to_corr[:4], var_to_corr[5:], 1 * (corr_par_pval < (0.05 / 3))[:4, 5:].T,
                   cbarlabel='Spearman coefficient', cmap=parula_map())
 
-# --------------------------------------------------
+# ---------------------------------------------------------------
 # SUPPLEMENTARY MATERIAL
-# --------------------------------------------------
+# ---------------------------------------------------------------
 
-# --------------------------------------------------
+# ---------------------------------------------------------------
 # Fig S3a
-# --------------------------------------------------
+# ---------------------------------------------------------------
 
 fig, ax = plt.subplots(4, 8, sharex=True, sharey=True)
 grand_avg_erp_t = np.mean(avg_erp_t, axis=0)
@@ -488,9 +494,9 @@ ax[24].set_xlabel('Time, s')
 ax[24].set_ylabel('Amplitude, uV')
 ax[0].set_xlim([-0.2, 1.1])
 
-# --------------------------------------------------
+# ---------------------------------------------------------------
 # Fig S3b
-# --------------------------------------------------
+# ---------------------------------------------------------------
 
 grand_avg_env_t = np.mean(avg_env_t, axis=0)
 fig, ax = plt.subplots(4, 8, sharex=True, sharey=True)
@@ -504,16 +510,17 @@ ax[24].set_xlabel('Time, s')
 ax[24].set_ylabel('Amplitude, uV')
 ax[0].set_xlim([-0.2, 1.1])
 
-# -----------------------------------------------
+# ---------------------------------------------------------------
 # Fig S4a
-# -----------------------------------------------
+# ---------------------------------------------------------------
 
 topoplot_with_colorbar(bsi_mode, raw_info, cmap=parula_map(), vmin=-1, vmax=1)
 
-# -----------------------------------------------
+# ---------------------------------------------------------------
 # Fig S4b
-# -----------------------------------------------
+# ---------------------------------------------------------------
 
+# These files are generated with the script p_compute_bsi_in_source_space.py
 stc_bsi, _ = list_from_many(ids, op.join(dir_derr, 'eL_bsi'), '_bsi', 'pickle')
 bsi_mode = np.zeros((n_source,))
 for v in range(n_source):
