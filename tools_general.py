@@ -129,7 +129,7 @@ def list_from_many(ids, dir_read, file_ext, type_read='json'):
                 output.append(load_pickle(subj + file_ext, dir_read))
             else:
                 print('please specify correct type')
-        except ValueError:
+        except FileNotFoundError:
             print(subj + ' is not found.')
             not_found.append(subj)
 
