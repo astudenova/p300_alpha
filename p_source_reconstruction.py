@@ -39,6 +39,10 @@ for i_subj, subj in enumerate(ids):
     # create noise covariance with a bias of data length
     noise_cov = create_noise_cov(evoked_erp_t.data.shape, evoked_erp_t.info)
     # source reconstruction with eLORETA
+    
+    # I would add comments on why the specific parameters were chosen
+    # depth parameter can be deleted as we discussed (otherwise it is a bit confusing))
+    
     inv_op = mne.minimum_norm.make_inverse_operator(evoked_erp_t.info, forward, noise_cov,
                                                     loose=1.0, depth=5, fixed=False)
     stc_el = mne.minimum_norm.apply_inverse(evoked_erp_t.copy(), inverse_operator=inv_op,
