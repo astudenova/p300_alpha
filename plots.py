@@ -23,7 +23,7 @@ mpl.use("Qt5Agg")
 
 dir_codes = os.getcwd()
 dir_derr = load_json('settings_real/dirs_files.json', os.getcwd())['dir_derr']
-ids_all = load_json('settings_real/ids_real', dir_codes)
+ids_all = load_json('settings_real/ids.json', dir_codes)
 erp_times = np.array(load_json('erp_times.json', dir_codes))
 raw_info = load_pickle('raw_info.pkl', dir_codes)
 reject_spec = load_json('reject_spec.json', dir_codes)
@@ -414,7 +414,7 @@ for i_subj, subj in enumerate(ids):
 csp_filter = load_pickle('csp_filter_real.pkl', os.getcwd())
 csp_pattern = load_pickle('csp_pattern_real.pkl', os.getcwd())
 
-topoplot_with_colorbar(csp_pattern[:, 0], raw_info, cmap=parula_map())
+topoplot_with_colorbar(csp_pattern, raw_info, cmap=parula_map())
 
 # ---------------------------------------------------------------
 # FIGURE 8a
@@ -426,7 +426,7 @@ executive_comp, executive_ids = composite_executive(ids)
 
 # These files are generated with the script p_save_covariance_apply_csp.py
 csp_env_peak_lat = load_pickle('csp_env_peak_lat', dir_derr)
-csp_env_peak_amp = load_pickle('csp_env_peak_amp_', dir_derr)
+csp_env_peak_amp = load_pickle('csp_env_peak_amp', dir_derr)
 
 # spatially filtered
 dv1 = lda_erp_peak_amp

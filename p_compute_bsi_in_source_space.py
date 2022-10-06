@@ -36,7 +36,7 @@ for i_subj, subj in enumerate(ids):
     # source reconstruction with eLORETA
     forward = mne.read_forward_solution(fwd_dir)
     inv_op = mne.minimum_norm.make_inverse_operator(evoked_raw.info, forward, noise_cov,
-                                                    loose=1.0, depth=5, fixed=False)
+                                                    loose=1.0, fixed=False)
     stc_el = mne.minimum_norm.apply_inverse(evoked_raw.copy(), inverse_operator=inv_op,
                                             lambda2=0.05, method='eLORETA', pick_ori='normal')
 
