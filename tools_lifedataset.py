@@ -92,7 +92,7 @@ def create_raw_for_source_reconstruction(raw, decim=5):
     return evoked_raw
 
 
-def create_erp_for_source_reconstruction(erp, decim=10):
+def create_erp_for_source_reconstruction(erp, decim=10, n_ch=62):
     """
     Prepare the data for source reconstruction
 
@@ -118,7 +118,11 @@ def create_erp_for_source_reconstruction(erp, decim=10):
         erp_data = np.swapaxes(erp_data, epoch_dim, 0)
         epochs = len(erp.events)
     # check if second dimension is channels
-    if channels > times:
+    
+    # this might create problems with a higher number of channels and a short
+    # time window, especially after decimating the data
+    
+    if channels != n_ch:
         erp_data = np.swapaxes(erp_data, 2, 1)
         channels, times = times, channels
 
