@@ -142,7 +142,7 @@ def scaler_transform(data, scaler='standard'):
 
     :param numpy.ndarray data: data to apply scaler to, should be samples x features (dimensions - 2D)
     :param str scaler: either 'standard' or 'minmax', type of scaler, for 'minmax' scaler range is set to [-1,1]
-    :returns: data_scale (numpy.ndarray, 2D) - data scaler-transformed
+    :return: data_scale (numpy.ndarray, 2D) - data scaler-transformed
     """
 
     from sklearn.preprocessing import MinMaxScaler, StandardScaler
@@ -174,7 +174,39 @@ def scale_to_zero_one(data):
     Scales data in [0,1] range
 
     :param numpy.ndarray data: data to apply scaler to, should be samples x 1 (dimnesions - 1D)
-    :returns: data_scale (numpy.ndarray, 1D) - data transformed
+    :return: data_scale (numpy.ndarray, 1D) - data transformed
     """
     data_scale = (data - np.min(data)) / (np.max(data) - np.min(data))
     return data_scale
+
+
+def permutation_test_outcome(cluster_stats):
+    """
+    Computes the outcome of the cluster test for further plots
+
+    Adapted from MNE-python
+    https://mne.tools/dev/auto_tutorials/stats-sensor-space/75_cluster_ftest_spatiotemporal.html#sphx-glr-auto-tutorials-stats-sensor-space-75-cluster-ftest-spatiotemporal-py
+
+    :param numpy.array cluster_stats: output from mne.stats.spatio_temporal_cluster_test
+    :returns:
+        F_obs (numpy.ndarray) - values of statistics;
+        F_obs_sig (numpy.ndarray) - values of significance
+    """
+
+    F_obs, clusters, p_values, _ = cluster_stats
+    good_cluster_inds = np.where(p_values < 0.05)[0]
+    clusters = [clusters[i] for i in range(len(clusters)) if i in good_cluster_inds]
+    F_obs_sig = 1 * np.ones(F_obs.shape)
+
+    ch_inds = []
+    times_inds = []
+    for cluster in clusters:
+        time_inds, space_inds = np.squeeze(cluster)
+
+        for i, ti in enumerate(time_inds):
+            F_obs_sig[ti, space_inds[i]] = np.nan
+
+        ch_inds.append(np.unique(space_inds))
+        times_inds.append(np.unique(time_inds))
+
+    return F_obs, F_obs_sig
