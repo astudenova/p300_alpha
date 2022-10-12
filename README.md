@@ -19,7 +19,7 @@ plot_simulated.py - pipeline for plotting using simulated data (without statisti
 
 plots.py - pipeline for plotting fig. 1-8
 
-simulations_fig_methods.py - simulates non-zero mean oscillations for figure in Methods section
+simulations_figs.py - simulates non-zero mean oscillations for figure in Introduction and Methods section, and in Supplementary file
 
 tools_external.py - functions from other researchers
 
