@@ -99,13 +99,13 @@ for i_subj, subj in enumerate(ids):
         print('ERP peak is not found for subject ' + str(subj))
         print('Setting the peak latency to 0.5.')
 
-erd_topo_avg = np.zeros((len(ids), n_ch))
+erd_avg = np.zeros((len(ids), n_ch))
 for i_subj in range(len(ids)):
     pk_sample_erp = np.argmin(np.abs(erp_times - erp_peaks_avg[i_subj]))
-    erd_topo_avg[i_subj] = 1 - (np.mean(avg_env_t[i_subj, :, pk_sample_erp - 50:pk_sample_erp + 50], axis=1) / np.mean(
+    erd_avg[i_subj] = 1 - (np.mean(avg_env_t[i_subj, :, pk_sample_erp - 50:pk_sample_erp + 50], axis=1) / np.mean(
         avg_env_t[i_subj, :, 150:250], axis=1))
 
-erd_pz = erd_topo_avg[:, pz_idx]
+erd_pz = erd_avg[:, pz_idx]
 
 erd_bins = list(np.percentile(erd_pz, np.arange(0, 100, 20)))
 erd_bins.append(np.max(erd_pz))
@@ -154,12 +154,12 @@ sen_sorted = load_json('sen_sorted_idx.json', dir_codes)
 # make bins for each channel
 idx_bin = np.zeros((n_ch, 5, len(ids)), dtype=bool)
 for ch in range(n_ch):
-    bsi_bins = np.percentile(np.sort(erd_topo_avg[:, ch]), np.arange(0, 100, 20))
+    bsi_bins = np.percentile(np.sort(erd_avg[:, ch]), np.arange(0, 100, 20))
     # create binning idx
-    idx_bin[ch, 0] = erd_topo_avg[:, ch] < bsi_bins[1]
-    idx_bin[ch, -1] = erd_topo_avg[:, ch] > bsi_bins[-1]
+    idx_bin[ch, 0] = erd_avg[:, ch] < bsi_bins[1]
+    idx_bin[ch, -1] = erd_avg[:, ch] > bsi_bins[-1]
     for i in range(1, 5 - 1):
-        idx_bin[ch, i] = np.multiply(erd_topo_avg[:, ch] > bsi_bins[i], erd_topo_avg[:, ch] < bsi_bins[i + 1])
+        idx_bin[ch, i] = np.multiply(erd_avg[:, ch] > bsi_bins[i], erd_avg[:, ch] < bsi_bins[i + 1])
 
 # arrange P300 according to bins
 ampl_full_t = np.zeros((2, len(ids), n_ch, len(erp_times)))
