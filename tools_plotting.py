@@ -172,7 +172,7 @@ def plot_with_sem_color(x, y, ax, ax_num, xlim, color_y, color_y_sem, alpha_leve
     from scipy.stats.stats import sem
 
     # plot each sem and line in a loop
-    if ax_num:
+    if ax_num is not None:
         for yi, yval in enumerate(y):
             ax[ax_num].fill_between(x,
                                     np.mean(yval, axis=0) - sem(yval, axis=0),
