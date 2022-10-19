@@ -30,10 +30,13 @@ for i_subj, subj in enumerate(ids):
     decim = 10
     fs = erp_t.info['sfreq'] / decim
     alpha_pk = np.mean(alpha_peaks[i_subj])
+    n_ch = len(erp_t.ch_names)
 
     # create an evoked array for further processing
-    evoked_erp_t = create_erp_for_source_reconstruction(erp_t.copy(), decim=decim)
-    evoked_erp_s = create_erp_for_source_reconstruction(erp_s.copy(), decim=decim)
+    evoked_erp_t = create_erp_for_source_reconstruction(erp_t.copy(),
+                                                        decim=decim, n_ch=n_ch)
+    evoked_erp_s = create_erp_for_source_reconstruction(erp_s.copy(),
+                                                        decim=decim, n_ch=n_ch)
 
     # for target stimulus
     # create noise covariance with a bias of data length
@@ -62,7 +65,7 @@ for i_subj, subj in enumerate(ids):
     noise_cov = create_noise_cov(evoked_erp_s.data.shape, evoked_erp_s.info)
     # source reconstruction with eLORETA
     inv_op = mne.minimum_norm.make_inverse_operator(evoked_erp_s.info, forward, noise_cov,
-                                                    loose=1.0, depth=5, fixed=False)
+                                                    loose=1.0, fixed=False)
     stc_el = mne.minimum_norm.apply_inverse(evoked_erp_s.copy(), inverse_operator=inv_op,
                                             lambda2=0.05, method='eLORETA', pick_ori='normal')
     print('eLORETA fit is completed.')
@@ -77,6 +80,14 @@ for i_subj, subj in enumerate(ids):
     # compute average ER for each voxel
     stc_s_filt = filter_in_low_frequency(stc_data_epoched, fs, padlen=None)
     stc_s_avg = np.mean(stc_s_filt, axis=0)
+
+    # Check whether the specified path exists or not
+    path = op.join(dir_save, 'eL_p300_alpha')
+    isExist = os.path.exists(path)
+
+    if not isExist:
+        # Create a new directory if it does not exist
+        os.makedirs(path)
 
     # save
     save_pickle(subj + '_t', op.join(dir_save, 'eL_p300_alpha'), stc_t_avg)
