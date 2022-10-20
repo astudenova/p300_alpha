@@ -19,10 +19,10 @@ from tools_plotting import plot_with_sem_one_line, topoplot_with_colorbar, parul
     plot_with_sem_color, annotated_heatmap, parula_map_backward, plot_brain_views
 from tools_signal import pk_latencies_amplitudes, apply_spatial_filter, lda_
 
-#mpl.use("Qt5Agg")
+mpl.use("Qt5Agg")
 
 dir_codes = os.getcwd()
-dir_derr = load_json('settings_realzzzz/dirs_files.json', os.getcwd())['dir_derr']
+dir_derr = load_json('settings_real/dirs_files.json', os.getcwd())['dir_derr']
 ids_all = load_json('settings_real/ids.json', dir_codes)
 erp_times = np.array(load_json('erp_times.json', dir_codes))
 raw_info = load_pickle('raw_info.pkl', dir_codes)
@@ -37,11 +37,7 @@ age, age_ids = read_age(ids)
 gender, _ = read_gender(ids)
 
 # for source reconstruction
-#subjects_dir = load_json('settings_real/dirs_files.json', os.getcwd())['subjects_dir']
-
-# try out with simulated data
-
-subjects_dir = load_json('settings/dirs_files.json', os.getcwd())['subjects_dir']
+subjects_dir = load_json('settings_real/dirs_files.json', os.getcwd())['subjects_dir']
 
 subject = 'fsaverage'
 
@@ -444,8 +440,6 @@ cluster_bool = np.multiply(cluster_erp_bool, cluster_env_bool)
 data_to_plot = cluster_bool
 clim = dict(kind='value', lims=[0, np.mean(data_to_plot), np.max(data_to_plot)])
 plot_brain_views(data_to_plot, clim, 'cluster', cmap=parula_map_backward())
-
-
 
 # ---------------------------------------------------------------
 # FIGURE 7d
