@@ -19,10 +19,10 @@ from tools_plotting import plot_with_sem_one_line, topoplot_with_colorbar, parul
     plot_with_sem_color, annotated_heatmap, parula_map_backward, plot_brain_views
 from tools_signal import pk_latencies_amplitudes, apply_spatial_filter, lda_
 
-mpl.use("Qt5Agg")
+#mpl.use("Qt5Agg")
 
 dir_codes = os.getcwd()
-dir_derr = load_json('settings_real/dirs_files.json', os.getcwd())['dir_derr']
+dir_derr = load_json('settings_realzzzz/dirs_files.json', os.getcwd())['dir_derr']
 ids_all = load_json('settings_real/ids.json', dir_codes)
 erp_times = np.array(load_json('erp_times.json', dir_codes))
 raw_info = load_pickle('raw_info.pkl', dir_codes)
@@ -37,7 +37,12 @@ age, age_ids = read_age(ids)
 gender, _ = read_gender(ids)
 
 # for source reconstruction
-subjects_dir = load_json('settings_real/dirs_files.json', os.getcwd())['subjects_dir']
+#subjects_dir = load_json('settings_real/dirs_files.json', os.getcwd())['subjects_dir']
+
+# try out with simulated data
+
+subjects_dir = load_json('settings/dirs_files.json', os.getcwd())['subjects_dir']
+
 subject = 'fsaverage'
 
 erp_times_dec = load_json_to_numpy('erp_times_dec.json', dir_codes)
@@ -377,15 +382,6 @@ data_to_plot = np.multiply(np.mean(corr_p300_alpha, axis=0), np.abs(t_stat_t_s) 
 clim = dict(kind='value',
             lims=[-1 * np.nanmax(np.abs(data_to_plot)), 0, 1 * np.nanmax(np.abs(data_to_plot))])
 plot_brain_views(data_to_plot, clim, 'corr', cmap=parula_map())
-# unhashtag for mask plotting
-for i in range(len(data_to_plot)):
-    if data_to_plot[i] == 0:
-        data_to_plot[i] = -1000
-    else:
-        data_to_plot[i] = 1000
-clim = dict(kind='value',
-            lims=[-1 * np.nanmax(np.abs(data_to_plot)), 0, 1 * np.nanmax(np.abs(data_to_plot))])
-plot_brain_views(data_to_plot, clim, 'corr_mask', cmap=parula_map())
 
 # These files are generated with the script p_source_reconstruction.py
 stc_p300, _ = list_from_many(ids, op.join(dir_derr, 'eL_p300_alpha'), '_t', 'pickle')
@@ -407,11 +403,15 @@ t_vox = [ttest_rel(X1[:, vi], X2[:, vi])[0] for vi in range(n_source)]
 print(np.sum(np.abs(t_vox) > thr_source))
 
 X_avg_diff = np.squeeze(np.mean(X1 - X2, axis=0))
+
+# maybe add a comment why this is necassary and what do you do with it,
+# otherwise delete
+
 cluster_erp_bool = np.multiply(np.multiply(X_avg_diff, X_avg_diff > np.percentile(np.abs(X_avg_diff), 90)),
                                np.array(t_vox) > thr_source) > 0
 
 data_to_plot = np.multiply(X_avg_diff, np.abs(t_vox) > thr_source)
-data_to_plot[np.logical_not(np.abs(t_vox) > thr_source)] = np.nan
+
 clim = dict(kind='value', lims=[np.nanmin(X_avg_diff), np.nanmean(X_avg_diff), np.nanmax(X_avg_diff)])
 plot_brain_views(data_to_plot, clim, 'p300', cmap=parula_map())
 
@@ -435,11 +435,17 @@ data_to_plot = np.multiply(X_avg_diff, np.array(t_vox) > thr_source)
 clim = dict(kind='value', lims=[1, np.mean(X_avg_diff), np.max(X_avg_diff)])
 plot_brain_views(data_to_plot, clim, 'alpha_env', cmap=parula_map_backward())
 
+# I get a type error: TypeError: numpy boolean subtract, the `-` operator, is not supported, use the bitwise_xor, the `^` operator, or the logical_xor function instead.
+# is this code necessary (I guess you create the mask but the plotting doesn't
+# work, then I sugggest deleting the plot_brain_views()
+
 # plot cluster mask
 cluster_bool = np.multiply(cluster_erp_bool, cluster_env_bool)
 data_to_plot = cluster_bool
 clim = dict(kind='value', lims=[0, np.mean(data_to_plot), np.max(data_to_plot)])
 plot_brain_views(data_to_plot, clim, 'cluster', cmap=parula_map_backward())
+
+
 
 # ---------------------------------------------------------------
 # FIGURE 7d
@@ -453,8 +459,6 @@ data_to_plot = stc_bsi_avg
 clim = dict(kind='value',
             lims=[-1 * np.nanmax(np.abs(data_to_plot)), 0, 1 * np.nanmax(np.abs(data_to_plot))])
 plot_brain_views(data_to_plot, clim, 'bsi', cmap=parula_map())
-
-bsi_corr = np.array([pearsonr(stc_bsi[:, v], corr_p300_alpha[:, v])[0] for v in range(n_source)])
 
 # ---------------------------------------------------------------
 # FIGURE 8
