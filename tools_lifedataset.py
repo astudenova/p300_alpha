@@ -98,6 +98,7 @@ def create_erp_for_source_reconstruction(erp, decim=10, n_ch=62):
 
     :param mne.Epochs erp: data to prepare
     :param int decim: decimation factor, default decim = 10
+    :param int n_ch: number of channels (electrodes, sensors) in the data, default n_ch = 62
     :returns: evoked_erp (mne.EvokedArray) - data that can be passed to source reconstruction
     """
 
@@ -117,11 +118,8 @@ def create_erp_for_source_reconstruction(erp, decim=10, n_ch=62):
         epoch_dim = np.where(np.array(erp_data.shape) == len(erp.events))[0][0]
         erp_data = np.swapaxes(erp_data, epoch_dim, 0)
         epochs = len(erp.events)
-    # check if second dimension is channels
-    
-    # this might create problems with a higher number of channels and a short
-    # time window, especially after decimating the data
-    
+        
+    # check if second dimension is channels   
     if channels != n_ch:
         erp_data = np.swapaxes(erp_data, 2, 1)
         channels, times = times, channels
