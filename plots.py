@@ -251,6 +251,7 @@ plt.legend()
 plt.xlabel('BSI')
 plt.title('BSI at Pz')
 
+# compute correlation between bsi and p300-alpha correlation to report value in the manuscript
 corr_bsi_corr_t = np.zeros((n_ch,))
 pval_bsi_corr_t = np.zeros((n_ch,))
 for ch in range(n_ch):
@@ -400,12 +401,6 @@ print(np.sum(np.abs(t_vox) > thr_source))
 
 X_avg_diff = np.squeeze(np.mean(X1 - X2, axis=0))
 
-# maybe add a comment why this is necassary and what do you do with it,
-# otherwise delete
-
-cluster_erp_bool = np.multiply(np.multiply(X_avg_diff, X_avg_diff > np.percentile(np.abs(X_avg_diff), 90)),
-                               np.array(t_vox) > thr_source) > 0
-
 data_to_plot = np.multiply(X_avg_diff, np.abs(t_vox) > thr_source)
 
 clim = dict(kind='value', lims=[np.nanmin(X_avg_diff), np.nanmean(X_avg_diff), np.nanmax(X_avg_diff)])
@@ -424,22 +419,10 @@ t_vox = [ttest_rel(X1[:, vi], X2[:, vi])[0] for vi in range(n_source)]
 print(np.sum(np.array(t_vox) > thr_source))
 
 X_avg_diff = np.squeeze(np.mean(X1 / X2, axis=0))
-cluster_env_bool = np.multiply(np.multiply(X_avg_diff, X_avg_diff > np.percentile(X_avg_diff, 90)),
-                               np.array(t_vox) > thr_source) > 0
 
 data_to_plot = np.multiply(X_avg_diff, np.array(t_vox) > thr_source)
 clim = dict(kind='value', lims=[1, np.mean(X_avg_diff), np.max(X_avg_diff)])
 plot_brain_views(data_to_plot, clim, 'alpha_env', cmap=parula_map_backward())
-
-# I get a type error: TypeError: numpy boolean subtract, the `-` operator, is not supported, use the bitwise_xor, the `^` operator, or the logical_xor function instead.
-# is this code necessary (I guess you create the mask but the plotting doesn't
-# work, then I sugggest deleting the plot_brain_views()
-
-# plot cluster mask
-cluster_bool = np.multiply(cluster_erp_bool, cluster_env_bool)
-data_to_plot = cluster_bool
-clim = dict(kind='value', lims=[0, np.mean(data_to_plot), np.max(data_to_plot)])
-plot_brain_views(data_to_plot, clim, 'cluster', cmap=parula_map_backward())
 
 # ---------------------------------------------------------------
 # FIGURE 7d
@@ -454,6 +437,8 @@ clim = dict(kind='value',
             lims=[-1 * np.nanmax(np.abs(data_to_plot)), 0, 1 * np.nanmax(np.abs(data_to_plot))])
 plot_brain_views(data_to_plot, clim, 'bsi', cmap=parula_map())
 
+# compute correlation between bsi and p300-alpha correlation to report value in the manuscript
+bsi_corr = np.array([pearsonr(stc_bsi[:, v], corr_p300_alpha[:, v])[0] for v in range(n_source)])
 # ---------------------------------------------------------------
 # FIGURE 8
 # ---------------------------------------------------------------
