@@ -118,7 +118,7 @@ def create_erp_for_source_reconstruction(erp, decim=10, n_ch=62):
         epoch_dim = np.where(np.array(erp_data.shape) == len(erp.events))[0][0]
         erp_data = np.swapaxes(erp_data, epoch_dim, 0)
         epochs = len(erp.events)
-        
+
     # check if second dimension is channels   
     if channels != n_ch:
         erp_data = np.swapaxes(erp_data, 2, 1)
@@ -405,7 +405,7 @@ def composite_attention(ids):
     attention_ids, idx3, idx4 = np.intersect1d(ids_tmt_ids, stroop_ids, return_indices=True)
 
     # scale transform and average
-    attention_all = np.vstack((tmta_time[idx2][idx3], stroop_n[idx4]))
+    attention_all = np.vstack((tmta_time[idx2][idx3] ** (-1), stroop_n[idx4] ** (-1)))  # the bigger, the better
     attention_all_scaled = scaler_transform(attention_all.T)
     attention_composite = np.mean(attention_all_scaled, axis=1)
 
@@ -497,7 +497,7 @@ def composite_executive(ids):
     executive_ids, idx3, idx4 = np.intersect1d(ids_tmt_ids, stroop_ids, return_indices=True)
 
     # scale-transform and average
-    executive_all = np.vstack((tmtb_time.reshape((-1))[idx2][idx3], stroop_in.reshape((-1))[idx4]))
+    executive_all = np.vstack((tmtb_time.reshape((-1))[idx2][idx3] ** (-1), stroop_in.reshape((-1))[idx4] ** (-1)))  # the bigger, the better
     executive_all_scaled = scaler_transform(executive_all.T)
     executive_composite = np.mean(executive_all_scaled, axis=1)
 

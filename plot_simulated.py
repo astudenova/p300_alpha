@@ -38,7 +38,7 @@ avg_env_s = load_pickle('avg_env_s', dir_derr)[full_mask]
 pz_idx = np.where(np.array(raw_info.ch_names) == 'Pz')[0][0]
 
 # ---------------------------------------------------------------
-# FIGURE 1a
+# FIGURE 2a
 # ---------------------------------------------------------------
 
 fig, ax = plt.subplots(1, 2, sharex=True)
@@ -57,7 +57,7 @@ plot_with_sem_one_line(erp_times, avg_env_s[:, pz_idx, :], ax, 1, xlim=[-0.2, 1.
                        color_y='tan', color_y_sem='antiquewhite', label_y='standard')
 
 # ---------------------------------------------------------------
-# FIGURE 2
+# FIGURE 4
 # ---------------------------------------------------------------
 
 erp_peaks_avg = []
@@ -89,20 +89,13 @@ topoplot_with_colorbar(np.mean(env_topo_avg / noenv_topo_avg, axis=0),
                        raw_info, cmap=parula_map(), vmin=0.55, vmax=0.80)
 
 # ---------------------------------------------------------------
-# FIGURE 3a
+# FIGURE 5a
 # ---------------------------------------------------------------
 
 # This file is generated with the script p_compute_bsi.py
 bsi_all = load_pickle('bsi_all', dir_derr)[full_mask]
 bsi_mean = np.mean(bsi_all, axis=0)
 topoplot_with_colorbar(bsi_mean, raw_info, cmap=parula_map())
-
-# compute mode for later
-bsi_mode = np.zeros((n_ch,))
-for ch in range(n_ch):
-    n, bins, _ = plt.hist(bsi_all[:, ch])
-    mode_index = np.argmax(n)
-    bsi_mode[ch] = (bins[mode_index] + bins[mode_index + 1]) / 2
 
 # ---------------------------------------------------------------
 # FIGURE 6
@@ -154,27 +147,14 @@ clim = dict(kind='value', lims=[1, np.mean(X_avg_diff), np.max(X_avg_diff)])
 plot_brain_views(data_to_plot, clim, 'alpha_env', cmap=parula_map_backward())
 
 # ---------------------------------------------------------------
-# FIGURE 7a
-# ---------------------------------------------------------------
-
-# These files are generated with the script p_compute_bsi_in_source_space.py
-stc_bsi, _ = list_from_many(ids, op.join(dir_derr, 'eL_bsi'), '_bsi', 'pickle')
-stc_bsi_avg = np.mean(stc_bsi, axis=0)
-
-data_to_plot = stc_bsi_avg
-clim = dict(kind='value',
-            lims=[-1 * np.nanmax(np.abs(data_to_plot)), 0, 1 * np.nanmax(np.abs(data_to_plot))])
-plot_brain_views(data_to_plot, clim, 'bsi', cmap=parula_map())
-
-# ---------------------------------------------------------------
-# FIGURE 8b
+# FIGURE 7b
 # ---------------------------------------------------------------
 
 lda_filter, lda_pattern = lda_(avg_erp_t[:, :n_ch], avg_erp_s[:, :n_ch], [0.3, 0.7], erp_times)
 topoplot_with_colorbar(lda_pattern, raw_info, cmap=parula_map())
 
 # ---------------------------------------------------------------
-# FIGURE 8c
+# FIGURE 7c
 # ---------------------------------------------------------------
 
 # This file is generated with the script p_save_covariance_apply_csp.py

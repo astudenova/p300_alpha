@@ -7,13 +7,11 @@
 
 p_compute_bsi.py - pipline for computation of baseline-shift indices (BSI) in sensor space. This pipeline generates data derrivatives for figs. 3, 4, S4a.
 
-p_compute_bsi_in_source_space.py - pipline for computation of baseline-shift indices (BSI) in source space. This pipeline generates data derrivatives for figs. 7, S4b.
-
-p_read_erp_alpha_save.py - pipline for computation of saving ERs, alpha envelopes, and their trial-by-trial correlation in sensor space. This pipeline generates data derrivatives for figs. 1, 2, S3.
+p_read_erp_alpha_save.py - pipline for computation of saving ERs and alpha envelopes in sensor space. This pipeline generates data derrivatives for figs. 1, 2, S3.
 
 p_save_covariance_apply_csp.py - pipeline for computation of covariance matries and CSP filter and pattern. This pipeline generates data derrivatives for figs. 8a, 8c.
 
-p_source_reconstruction.py - pipline for computation of saving ERs, alpha envelopes, and their trial-by-trial correlation in source space. This pipeline generates data derrivatives for figs. 5, 6.
+p_source_reconstruction.py - pipline for computation of saving ERs and alpha envelopes in source space. This pipeline generates data derrivatives for figs. 5, 6.
 
 plot_simulated.py - pipeline for plotting using simulated data (without statistical assessment)
 

@@ -1,6 +1,6 @@
 """
 This pipeline performs source reconstruction on stimulus data, and stores reconstructed ERs and
-alpha rhythm envelopes, and their trial-by-trial correlations.
+alpha rhythm envelopes.
 Similar to p_read_erp_alpha_save.py but for source space.
 """
 import os
@@ -96,25 +96,5 @@ for i_subj, subj in enumerate(ids):
     save_pickle(subj + '_s_env', op.join(dir_save, 'eL_p300_alpha'), stc_s_env_avg)
 
     print('ER and envelopes are saved.')
-
-    # correlation
-    n_source = stc_el._data.shape[0]
-    n_epoch = len(erp_t.events)
-    n_times = int(len(stc_el.times) / len(erp_s.events)) - 20
-    # target
-    erp_t_filt_flat = from_epoch_to_cont(stc_t_filt, n_source, n_epoch, wings=10)
-    env_t_flat = from_epoch_to_cont(stc_t_env, n_source, n_epoch, wings=10)
-    corr_t = [pearsonr(erp_t_filt_flat[i], env_t_flat[i])[0] for i in range(n_source)]
-    print('Correlation for target is computed.')
-
-    # standard with subsample
-    s_sample = np.random.random_integers(low=0, high=erp_s.events.shape[0] - 1, size=(n_epoch,))
-    erp_s_filt_flat = from_epoch_to_cont(stc_s_filt[s_sample], n_source, n_epoch, wings=10)
-    env_s_flat = from_epoch_to_cont(stc_s_env[s_sample], n_source, n_epoch, wings=10)
-    corr_s = [pearsonr(erp_s_filt_flat[i], env_s_flat[i])[0] for i in range(n_source)]
-    print('Correlation for standard is computed.')
-
-    save_json(subj + '_corr_t', op.join(dir_save, 'eL_p300_alpha'), corr_t)
-    save_json(subj + '_corr_s', op.join(dir_save, 'eL_p300_alpha'), corr_s)
 
     print('--------------' + str(i_subj) + ' ' + subj + ' is finished--------------------')
