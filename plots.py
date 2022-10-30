@@ -149,7 +149,7 @@ ax[1].set_xlim([-0.2, 1.1])
 # ---------------------------------------------------------------
 # FIGURE 3c
 # ---------------------------------------------------------------
-sen_sorted = load_json('sen_sorted_idx.json', dir_codes)
+
 # make bins for each channel
 idx_bin = np.zeros((n_ch, 5, len(ids)), dtype=bool)
 for ch in range(n_ch):
@@ -190,13 +190,13 @@ cluster_stats = spatio_temporal_cluster_test(X, n_permutations=10000,
 
 F_obs, F_obs_sig = permutation_test_outcome(cluster_stats)
 
-plt.imshow(F_obs[:, sen_sorted].T, aspect=15, cmap=parula_map())
-plt.imshow(F_obs_sig[:, sen_sorted].T, aspect=15, cmap='Greys', alpha=0.6)
+plt.imshow(F_obs.T, aspect=15, cmap=parula_map())
+plt.imshow(F_obs_sig.T, aspect=15, cmap='Greys', alpha=0.6)
 
-t450 = np.argmin(np.abs(erp_times - .45))
+t500 = np.argmin(np.abs(erp_times - .5))
 ch_mask = np.zeros((n_ch,), dtype=bool)
-ch_mask[F_obs_sig[t450] != 1] = True
-topoplot_with_colorbar(F_obs[t450], raw_info=raw_info,
+ch_mask[F_obs_sig[t500] != 1] = True
+topoplot_with_colorbar(F_obs[t500], raw_info=raw_info,
                        cmap=parula_map(), mask=ch_mask, vmin=np.min(F_obs), vmax=np.max(F_obs))
 
 # ---------------------------------------------------------------
@@ -286,7 +286,6 @@ for patch in patches:
 # FIGURE 5d
 # ---------------------------------------------------------------
 
-sen_sorted = load_json('sen_sorted_idx.json', dir_codes)
 # make bins for each channel
 idx_bin = np.zeros((n_ch, 5, len(ids)), dtype=bool)
 for ch in range(n_ch):
@@ -327,8 +326,8 @@ cluster_stats = spatio_temporal_cluster_test(X, n_permutations=10000,
 
 F_obs, F_obs_sig = permutation_test_outcome(cluster_stats)
 
-plt.imshow(F_obs[:, sen_sorted].T, aspect=15, cmap=parula_map())
-plt.imshow(F_obs_sig[:, sen_sorted].T, aspect=15, cmap='Greys', alpha=0.6)
+plt.imshow(F_obs.T, aspect=15, cmap=parula_map())
+plt.imshow(F_obs_sig.T, aspect=15, cmap='Greys', alpha=0.6)
 
 # ---------------------------------------------------------------
 # FIGURE 5e
