@@ -29,13 +29,6 @@ for i_subj, subj in enumerate(ids):
                              n_ch=len(erp_t.ch_names) - 3, fs=fs, subtract=True)
     print('Envelope for target stimulus is computed.')
 
-    # create concatenated signal for target ER
-    n_ch = env_t.shape[1]
-    n_epoch = env_t.shape[0]
-    n_times = erp_t_filt.shape[2] - 200  # cut 100 ms from each end to avoid edge artifacts
-    erp_t_filt_flat = from_epoch_to_cont(erp_t_filt, n_ch, n_epoch, wings=100)
-    env_t_flat = from_epoch_to_cont(env_t, n_ch, n_epoch, wings=100)
-
     save_pickle(subj + '_erp_t', dir_save, np.mean(erp_t_filt, axis=0))
     save_pickle(subj + '_erp_s', dir_save, np.mean(erp_s_filt, axis=0))
     save_pickle(subj + '_env_t', dir_save, np.mean(env_t, axis=0))
