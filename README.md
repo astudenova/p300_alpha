@@ -5,19 +5,19 @@
 
 ----------------------------
 
-p_compute_bsi.py - pipeline for computation of baseline-shift indices (BSI) in sensor space. This pipeline generates data derivatives for figs. 3, 4, S4a.
+p_compute_bsi.py - pipeline for computation of baseline-shift indices (BSI) in sensor space. This pipeline generates data derivatives for figs. 6.
 
-p_read_erp_alpha_save.py - pipeline for computation of saving ERs and alpha envelopes in sensor space. This pipeline generates data derivatives for figs. 1, 2, S3.
+p_read_erp_alpha_save.py - pipeline for computation of saving ERs and alpha envelopes in sensor space. This pipeline generates data derivatives for figs. 2, 3, 4, S3.
 
-p_save_covariance_apply_csp.py - pipeline for computation of covariance matrices and CSP filter and pattern. This pipeline generates data derivatives for figs. 8a, 8c.
+p_save_covariance_apply_csp.py - pipeline for computation of covariance matrices and CSP filter and pattern. This pipeline generates data derivatives for figs. 7a, 7c.
 
-p_source_reconstruction.py - pipeline for computation of saving ERs and alpha envelopes in source space. This pipeline generates data derivatives for figs. 5, 6.
+p_source_reconstruction.py - pipeline for computation of saving ERs and alpha envelopes in source space. This pipeline generates data derivatives for figs. 5.
 
 plot_simulated.py - pipeline for plotting using simulated data (without statistical assessment)
 
-plots.py - pipeline for plotting fig. 1-8
+plots.py - pipeline for plotting fig. 2-7
 
-simulations_figs.py - simulates non-zero mean oscillations for figure in Introduction and Methods section, and in Supplementary file
+simulations_figs.py - simulates non-zero mean oscillations for fig. 1 in Introduction and fig. 8 Methods section, and in Supplementary file fig. S4
 
 tools_external.py - functions from other researchers
 
