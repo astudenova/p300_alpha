@@ -150,7 +150,7 @@ ax[1].set_xlim([-0.2, 1.1])
 # FIGURE 3c
 # ---------------------------------------------------------------
 
-# make bins for each channel
+# make bins
 idx_bin = np.zeros((n_ch, 5, len(ids)), dtype=bool)
 for ch in range(n_ch):
     erd_bins = np.percentile(np.sort(erd_avg[:, ch]), np.arange(0, 100, 20))

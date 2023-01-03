@@ -10,8 +10,8 @@ def peak_in_spectrum(Pxx, freq):
     """
     Computes peak frequency in the alpha band 8-12 Hz from the given spectrum
 
-    :param numpy.ndarray Pxx: amplitude spectrum, recommended resolution - 0.1 Hz,
-        recommended window - more than 5 sec (for smoothness) (dimensions - 1D)
+    :param numpy.ndarray Pxx: amplitude spectrum, recommended resolution - 0.1-0.5 Hz,
+        recommended window - 5 sec and more (dimensions - 1D)
     :param numpy.ndarray freq: frequencies corresponding to the spectrum (dimensions - 1D)
     :returns: (float) - peak frequency in the alpha band
     """
