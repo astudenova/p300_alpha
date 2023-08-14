@@ -257,7 +257,7 @@ def pk_latencies_amplitudes(data, win, times, direction):
     """
 
     # if array is not 2D - return an error
-    if len(data.shape) != 2:
+    if len(data.shape) > 2:
         raise ValueError('Input data should be 2D.')
     # if data is a vector, add one dimension
     if len(data.shape) < 2:
