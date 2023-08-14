@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from mne.channels import find_ch_adjacency
 from mne.stats import spatio_temporal_cluster_test, ttest_ind_no_p
+from scipy.signal import butter, filtfilt
 from scipy.stats import pearsonr, ttest_rel, t, spearmanr, zscore
 from pingouin import partial_corr
 
@@ -514,3 +515,61 @@ for i in range(n_ch):
 ax[24].set_xlabel('Time, s')
 ax[24].set_ylabel('Amplitude, uV')
 ax[0].set_xlim([-0.2, 1.1])
+
+# ---------------------------------------------------------------
+# Fig S4
+# ---------------------------------------------------------------
+avg_erp_t_br = load_pickle('avg_erp_t_br', dir_derr)[full_mask]  # broadband
+
+# high-pass for comparison
+b_hp, a_hp = butter(N=4, Wn=4 / 1000 * 2, btype='highpass')
+avg_erp_t_br_hp = filtfilt(b_hp, a_hp, avg_erp_t_br)
+
+# choose data for which to run statistics
+erp_to_test = avg_erp_t_br_hp
+
+# make bins
+idx_bin = np.zeros((n_ch, 5, len(ids)), dtype=bool)
+for ch in range(n_ch):
+    erd_bins = np.percentile(np.sort(erd_avg[:, ch]), np.arange(0, 100, 20))
+    # create binning idx
+    idx_bin[ch, 0] = erd_avg[:, ch] < erd_bins[1]
+    idx_bin[ch, -1] = erd_avg[:, ch] > erd_bins[-1]
+    for i in range(1, 5 - 1):
+        idx_bin[ch, i] = np.multiply(erd_avg[:, ch] > erd_bins[i], erd_avg[:, ch] < erd_bins[i + 1])
+
+# arrange P300 according to bins
+ampl_full_t = np.zeros((2, len(ids), n_ch, len(erp_times)))
+idx_bin1 = idx_bin[:, 0]
+idx_bin5 = idx_bin[:, 4]
+for i_subj in range(len(ids)):
+    subj_mask_bin1 = idx_bin1[:, i_subj]
+    subj_mask_bin5 = idx_bin5[:, i_subj]
+    ampl_full_t[0, i_subj] = np.multiply(erp_to_test[i_subj, :n_ch].T, subj_mask_bin1).T
+    ampl_full_t[1, i_subj] = np.multiply(erp_to_test[i_subj, :n_ch].T, subj_mask_bin5).T
+
+ampl_t = np.zeros((2, np.sum(idx_bin[0, 0]), n_ch, len(erp_times)))
+for i in range(2):
+    for i_ch in range(n_ch):
+        cntr_t = 0
+        for i_subj in range(len(ids)):
+            if np.sum(ampl_full_t[i, i_subj, i_ch] == 0) != len(erp_times):
+                ampl_t[i, cntr_t, i_ch] = ampl_full_t[i, i_subj, i_ch]
+                cntr_t += 1
+
+# permutation test
+t_threshold = t.ppf(q=1 - 10 ** (-4) / 2, df=num_subj - 1)
+
+adjacency, ch_names = find_ch_adjacency(raw_info, ch_type='eeg')
+X = np.moveaxis(ampl_t, 3, 2)
+cluster_stats = spatio_temporal_cluster_test(X, n_permutations=10000,
+                                             threshold=t_threshold, stat_fun=ttest_ind_no_p, tail=0,
+                                             n_jobs=1, buffer_size=None, adjacency=adjacency)
+
+F_obs, F_obs_sig = permutation_test_outcome(cluster_stats)
+
+t100 = np.argmin(np.abs(erp_times - 0.1))
+ch_mask = np.zeros((n_ch,), dtype=bool)
+ch_mask[F_obs_sig[t100] != 1] = True
+topoplot_with_colorbar(F_obs[t100], raw_info=raw_info,
+                       cmap=parula_map(), mask=ch_mask, vmin=np.min(F_obs), vmax=np.max(F_obs))
