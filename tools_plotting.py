@@ -24,9 +24,9 @@ def topoplot_with_colorbar(data, raw_info, vmin=None, vmax=None, cmap='bone', ma
 
     # create a figure and plot topography
     fig, ax1 = plt.subplots(ncols=1)
-    im, cm = mne.viz.plot_topomap(data, raw_info, vmin=vmin, vmax=vmax,
+    im, cm = mne.viz.plot_topomap(data, raw_info, vlim=(vmin, vmax),
                                   ch_type='eeg', cmap=cmap, axes=ax1,
-                                  show=False, show_names=False, mask=mask, mask_params=mask_params)
+                                  show=False, mask=mask, mask_params=mask_params)
     # insert colorbar and adjust the position
     ax_x_start = 0.85
     ax_x_width = 0.04
