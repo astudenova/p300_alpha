@@ -9,8 +9,9 @@ import numpy as np
 import pandas as pd
 from mne.channels import find_ch_adjacency
 from mne.stats import spatio_temporal_cluster_test, ttest_ind_no_p
-from scipy.stats import pearsonr, ttest_rel, t, spearmanr
+from scipy.stats import pearsonr, ttest_rel, t, spearmanr, zscore
 from pingouin import partial_corr
+
 from tools_general import list_from_many, load_json_to_numpy, load_pickle, load_json, \
     scaler_transform, save_pickle, permutation_test_outcome
 from tools_lifedataset import read_medications, composite_attention, composite_memory, \
@@ -76,6 +77,20 @@ plot_with_sem_one_line(erp_times, avg_env_s[:, pz_idx, :], ax, 1, xlim=[-0.2, 1.
 # FIGURE 2b
 # ---------------------------------------------------------------
 
+fig, ax = plt.subplots(1, 1)
+ax.plot(erp_times, zscore(np.mean(avg_erp_t[:, pz_idx, :], axis=0)),
+        c='darkblue', label='erp', linewidth=3)
+ax.plot(erp_times, zscore(np.mean(avg_env_t[:, pz_idx, :], axis=0)),
+        c='orange', label='env', linewidth=3)
+ax.plot(erp_times, -zscore(np.mean(avg_env_t[:, pz_idx, :], axis=0)),
+        c='orange', label='env', linestyle='--', linewidth=3)
+ax.set_xlim([-0.2, 1.1])
+ax.legend()
+
+# ---------------------------------------------------------------
+# FIGURE 2c
+# ---------------------------------------------------------------
+
 corr_t = np.array([pearsonr(np.mean(avg_erp_t, axis=0)[i], np.mean(avg_env_t, axis=0)[i]) for i in range(n_ch)])
 
 thr_sen = 10 ** (-4) / n_ch
@@ -119,7 +134,7 @@ for ai in range(5):
 fig, ax = plt.subplots(1, 2)
 color_bins_erp = ['#00406B', '#104E8B', '#1874CD', '#1C86EE', '#1EA1FF']
 color_bins_env = ['#3B1E00', '#633200', '#8B4500', '#B35900', '#E57600']
-label_bsi = ['ERD-bin1: ' + str("{:.2f}".format(erd_bins[0])) + ' - ' + str("{:.2f}".format(erd_bins[1])),
+label_erd = ['ERD-bin1: ' + str("{:.2f}".format(erd_bins[0])) + ' - ' + str("{:.2f}".format(erd_bins[1])),
              'ERD-bin2: ' + str("{:.2f}".format(erd_bins[1])) + ' - ' + str("{:.2f}".format(erd_bins[2])),
              'ERD-bin3: ' + str("{:.2f}".format(erd_bins[2])) + ' - ' + str("{:.2f}".format(erd_bins[3])),
              'ERD-bin4: ' + str("{:.2f}".format(erd_bins[3])) + ' - ' + str("{:.2f}".format(erd_bins[4])),
@@ -132,7 +147,7 @@ plot_with_sem_color(erp_times, [avg_erp_t[binned_idx == 0, pz_idx, :], avg_erp_t
                     color_y=color_bins_erp,
                     color_y_sem=color_bins_erp,
                     alpha_level=[0.1, 0.1, 0.1, 0.1, 0.1],
-                    label_y=label_bsi)
+                    label_y=label_erd)
 ax[0].set_title('ERP')
 ax[0].set_xlim([-0.2, 1.1])
 plot_with_sem_color(erp_times, [avg_env_t[binned_idx == 0, pz_idx, :], avg_env_t[binned_idx == 1, pz_idx, :],
@@ -142,7 +157,7 @@ plot_with_sem_color(erp_times, [avg_env_t[binned_idx == 0, pz_idx, :], avg_env_t
                     color_y=color_bins_env,
                     color_y_sem=color_bins_env,
                     alpha_level=[0.1, 0.1, 0.1, 0.1, 0.1],
-                    label_y=label_bsi)
+                    label_y=label_erd)
 ax[1].set_title('alpha')
 ax[1].set_xlim([-0.2, 1.1])
 
@@ -202,6 +217,7 @@ topoplot_with_colorbar(F_obs[t500], raw_info=raw_info,
 # ---------------------------------------------------------------
 # FIGURE 4
 # ---------------------------------------------------------------
+
 # build topographies from avg peak values
 erp_topo_avg = np.zeros((len(ids), n_ch))
 env_topo_avg = np.zeros((len(ids), n_ch))
@@ -342,6 +358,7 @@ topoplot_with_colorbar(F_obs[t500], raw_info=raw_info,
 # ---------------------------------------------------------------
 # FIGURE 6a
 # ---------------------------------------------------------------
+
 n_source = 8196
 thr_source = t.ppf(q=1 - 10 ** (-4) / n_source / 2, df=num_subj - 1)
 
@@ -395,6 +412,9 @@ lda_filter, lda_pattern = lda_(avg_erp_t[:, :n_ch], avg_erp_s[:, :n_ch], [0.3, 0
 save_pickle('lda_filter', dir_derr, lda_filter)
 save_pickle('lda_pattern', dir_derr, lda_pattern)
 topoplot_with_colorbar(lda_pattern, raw_info, cmap=parula_map())
+lda_filter = load_pickle('lda_filter', dir_derr)
+lda_pattern = load_pickle('lda_pattern', dir_derr)
+
 
 lda_erp_peak_lat = np.zeros((len(ids),))
 lda_erp_peak_amp = np.zeros((len(ids),))
@@ -402,7 +422,7 @@ for i_subj, subj in enumerate(ids):
     erp_t = avg_erp_t[i_subj][:n_ch][np.newaxis, :, :]
 
     erp_t_spat = apply_spatial_filter(erp_t, lda_filter, lda_pattern, n_ch, n_epoch=1).reshape((-1))
-    erp_t_peak = pk_latencies_amplitudes(erp_t_spat, np.array([.2, 1]),
+    erp_t_peak = pk_latencies_amplitudes(erp_t_spat.reshape((1,-1)), np.array([.2, 1]),
                                          erp_times, direction='pos')[0][1:]
 
     lda_erp_peak_lat[i_subj] = erp_t_peak[0]
@@ -413,8 +433,8 @@ for i_subj, subj in enumerate(ids):
 # ---------------------------------------------------------------
 
 # These files are generated with the script p_save_covariance_apply_csp.py
-csp_filter = load_pickle('csp_filter_real.pkl', os.getcwd())
-csp_pattern = load_pickle('csp_pattern_real.pkl', os.getcwd())
+csp_filter = load_pickle('csp_filter.pkl', os.getcwd())
+csp_pattern = load_pickle('csp_pattern.pkl', os.getcwd())
 
 topoplot_with_colorbar(csp_pattern, raw_info, cmap=parula_map())
 
@@ -428,11 +448,11 @@ executive_comp, executive_ids = composite_executive(ids)
 
 # These files are generated with the script p_save_covariance_apply_csp.py
 csp_env_peak_lat = load_pickle('csp_env_peak_lat', dir_derr)
-csp_env_peak_amp = load_pickle('csp_env_peak_amp', dir_derr)
+csp_erd = load_pickle('csp_erd',dir_derr)
 
 # spatially filtered
 dv1 = lda_erp_peak_amp
-dv2 = csp_env_peak_amp
+dv2 = csp_erd
 dv3 = lda_erp_peak_lat
 dv4 = csp_env_peak_lat
 
@@ -457,24 +477,7 @@ data_totest['attention'] = attention_comp[idx2][idx3]
 data_totest['executive'] = executive_comp[idx1][idx3]
 data_totest['memory'] = memory_comp[idx4]
 
-var_to_corr = ['erpA', 'envA', 'erpL', 'envL', 'age', 'attention', 'memory', 'executive']
-corr_par = np.zeros((len(var_to_corr), len(var_to_corr)))
-corr_par_pval = np.zeros((len(var_to_corr), len(var_to_corr)))
-for i, var_i in enumerate(var_to_corr):
-    for j, var_j in enumerate(var_to_corr):
-        if i > j:
-            try:
-                corr_tmp_par = partial_corr(data_totest, var_i, var_j,
-                                            covar='age', method='spearman')
-                corr_par[i, j] = corr_par[j, i] = corr_tmp_par['r']
-                corr_par_pval[i, j] = corr_par_pval[j, i] = corr_tmp_par['p-val']
-            except:
-                print('no age')
-
-annotated_heatmap(var_to_corr[:4], var_to_corr[5:], np.round(corr_par[:4, 5:], 2).T,
-                  cbarlabel='Spearman coefficient', cmap=parula_map())
-annotated_heatmap(var_to_corr[:4], var_to_corr[5:], 1 * (corr_par_pval < (0.05 / 3))[:4, 5:].T,
-                  cbarlabel='Spearman coefficient', cmap=parula_map())
+data_totest.to_csv('forstatfile.csv', encoding='utf-8', index=False, header=data_totest.columns)
 
 # ---------------------------------------------------------------
 # SUPPLEMENTARY MATERIAL
