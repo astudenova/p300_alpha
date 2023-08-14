@@ -10,7 +10,7 @@ from tools_lifedataset import read_erp
 from tools_signal import from_epoch_to_cont, from_cont_to_epoch, apply_spatial_filter, \
     pk_latencies_amplitudes, filter_in_alpha_band
 
-dir_save = load_json('settings/dirs_files.json', os.getcwd())['dir_save']
+dir_save = os.path.join(load_json('settings/dirs_files.json', os.getcwd())['dir_save'],'erd/')
 dir_data = load_json('settings/dirs_files.json', os.getcwd())['dir_data']
 ids = load_json('settings/ids.json', os.getcwd())
 alpha_peaks = load_pickle('settings/alpha_peaks.pkl', os.getcwd())
@@ -68,8 +68,8 @@ csp_pattern = compute_patterns(cov_mat_s_avg, csp_filter)
 save_pickle('csp_filter', os.getcwd(), csp_filter)
 save_pickle('csp_pattern', os.getcwd(), csp_pattern)
 
-csp_filter = load_pickle('csp_filter', os.getcwd())[:, 0]
-csp_pattern = load_pickle('csp_pattern', os.getcwd())[:, 0]
+csp_filter = load_pickle('csp_filter.pkl', os.getcwd())
+csp_pattern = load_pickle('csp_pattern.pkl', os.getcwd())
 
 # Step 3. Apply csp on the data of each subject
 # to retrieve peak latency and peak amplitude of alpha amplitude
@@ -95,12 +95,16 @@ for i_subj, subj in enumerate(ids):
     # compute peak latency and peak amplitude from averaged time course
     env_t_spat_avg = np.mean(env_t_spat, axis=0).reshape((-1))
     env_t_peak = pk_latencies_amplitudes(env_t_spat_avg, np.array([.2, 1]), erp_times,
-                                         direction='neg')[0][1:]
-    save_pickle(subj + '_env_peak', dir_save, env_t_peak)
+                                         direction='neg')[0]
+    erd = np.mean(env_t_spat_avg[int(env_t_peak[0])-50:int(env_t_peak[0])+50])/np.mean(env_t_spat_avg[150:250]) - 1
+    save_pickle(subj + '_env_peak', dir_save, env_t_peak[1:])
+    save_pickle(subj+'_erd',dir_save, erd)
 
     print('--------------' + str(i_subj) + ' ' + subj + ' is finished--------------------')
 
 # collect all values into a single array
 env_peak_all, _ = list_from_many(ids, dir_save, '_env_peak', 'pickle')
+erd_all, _ = list_from_many(ids,dir_save,'_erd','pickle')
 save_pickle('csp_env_peak_lat', dir_save, env_peak_all[:, 0])
 save_pickle('csp_env_peak_amp', dir_save, env_peak_all[:, 1])
+save_pickle('csp_erd',dir_save,erd_all)
