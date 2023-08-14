@@ -5,9 +5,7 @@ test/
 settings_real/
 .gitignore
 .coverage
-cluster_stats.pkl
-cluster_stats_amp.pkl
-csp_filter_real.pkl
-csp_pattern_real.pkl
 reject_spec.json
 p_create_sim.py
+*.pkl
+*.csv
