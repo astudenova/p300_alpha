@@ -257,7 +257,7 @@ def pk_latencies_amplitudes(data, win, times, direction):
     """
 
     # if array is not 2D - return an error
-    if len(data.shape) > 2:
+    if len(data.shape) != 2:
         raise ValueError('Input data should be 2D.')
     # if data is a vector, add one dimension
     if len(data.shape) < 2:
@@ -292,9 +292,9 @@ def pk_latencies_amplitudes(data, win, times, direction):
         # if several peaks, take the most extreme one
         if len(pk_ampl) > 1:
             idx_max = np.argmax(pk_ampl) if direction == 'pos' else np.argmin(pk_ampl)
-            peaks[e_i] = [peak_locs[idx_max], pk_time[idx_max], pk_ampl[idx_max]]
+            peaks[e_i] = np.hstack([peak_locs[idx_max], pk_time[idx_max], pk_ampl[idx_max]])
         else:
-            peaks[e_i] = [peak_locs, pk_time, pk_ampl]
+            peaks[e_i] = np.hstack([peak_locs, pk_time, pk_ampl])
 
     return peaks
 
