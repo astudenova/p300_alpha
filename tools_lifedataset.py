@@ -8,7 +8,7 @@ import pandas as pd
 from tools_general import load_json
 
 
-def read_erp(subj, dir_data, decim=1, notch=False, h_freq=45):
+def read_erp(subj, dir_data, decim=1, notch=False, h_freq=45, baseline=(-.2, -.05)):
     """
     Read the data from stimulus based recordings
 
@@ -19,6 +19,7 @@ def read_erp(subj, dir_data, decim=1, notch=False, h_freq=45):
     :param int decim: decimation factor, default decim = 1 (no decimation)
     :param bool notch: application of the notch filter around 50 Hz, default = False
     :param int h_freq: frequency of cut-off, default = 45 Hz
+    :param tuple baseline: time window for baseline, default = (-.2, -.05)
     :returns: erp_s, erp_t, erp_n (instance of mne.Epochs) - Epochs of three types of stimuli
     """
 
@@ -52,7 +53,7 @@ def read_erp(subj, dir_data, decim=1, notch=False, h_freq=45):
     events = mne.events_from_annotations(erp)
     epochs = mne.Epochs(
         raw=erp, events=events[0], event_id=events[1],
-        baseline=(-.2, -.05), reject=reject,
+        baseline=baseline, reject=reject,
         reject_by_annotation=True,
         proj=True, event_repeated='drop',
         tmin=-.4, tmax=1.3, preload=True, decim=decim)
@@ -233,7 +234,7 @@ def read_cleaned_rest(subj, dir_data):
         # set average reference
         cleaned.set_eeg_reference()
         return cleaned
-    except ValueError:  # only one subject
+    except KeyError:  # only one subject
         print(subj + ' does not have clean data set')
         return []
 
@@ -497,7 +498,8 @@ def composite_executive(ids):
     executive_ids, idx3, idx4 = np.intersect1d(ids_tmt_ids, stroop_ids, return_indices=True)
 
     # scale-transform and average
-    executive_all = np.vstack((tmtb_time.reshape((-1))[idx2][idx3] ** (-1), stroop_in.reshape((-1))[idx4] ** (-1)))  # the bigger, the better
+    executive_all = np.vstack(
+        (tmtb_time.reshape((-1))[idx2][idx3] ** (-1), stroop_in.reshape((-1))[idx4] ** (-1)))  # the bigger, the better
     executive_all_scaled = scaler_transform(executive_all.T)
     executive_composite = np.mean(executive_all_scaled, axis=1)
 
