@@ -84,6 +84,7 @@ for i_subj in range(len(ids)):
     env_topo_avg[i_subj] = np.mean(avg_env_t[i_subj, :, pk_sample_erp - 50:pk_sample_erp + 50], axis=1)
     erp_topo_avg[i_subj] = avg_erp_t[i_subj, :n_ch, pk_sample_erp]
 
+# read BSI
 bsi_all = load_pickle('bsi_all', dir_derr)[full_mask]
 
 print(str(np.sum(tiv_mask)) + ' participants had the TIV data.')
@@ -113,8 +114,7 @@ for iplot in range(4):
 avg_erp_t_300bl = np.zeros(avg_erp_t_nobl.shape)
 avg_env_t_300bl = np.zeros(avg_env_t.shape)
 for i_subj in range(len(ids)):
-    bl_win = [np.argmin(np.abs(erp_times - erp_peaks_avg[i_subj])) - 100,
-              np.argmin(np.abs(erp_times - erp_peaks_avg[i_subj])) + 100]
+    bl_win = [np.argmin(np.abs(erp_times - .4)), np.argmin(np.abs(erp_times - .6))]
     bl = np.mean(avg_erp_t_nobl[i_subj][:, bl_win[0]:bl_win[1]], axis=1)
     avg_erp_t_300bl[i_subj] = np.subtract(avg_erp_t_nobl[i_subj], bl.reshape((-1, 1)))
     bl = -np.mean(avg_env_t[i_subj][:, 150:250], axis=1)
@@ -130,6 +130,7 @@ binned_idx = np.zeros(len(erd_pz), )
 for ai in range(5):
     binned_idx = binned_idx + ai * ((erd_bins[ai] <= erd_pz) * (erd_pz < erd_bins[ai + 1]))
 
+# plot
 fig, ax = plt.subplots(1, 3)
 ax = ax.flatten()
 color_bins_erp = ['#00406B', '#104E8B', '#1874CD', '#1C86EE', '#1EA1FF']
@@ -195,7 +196,7 @@ ax[1].set_title('alpha envelope multiplied by -1')
 ax[1].set_xlim([-0.2, 1.1])
 
 # statistical evaluation
-erp_to_test = avg_erp_t_nobl
+erp_to_test = avg_erp_t_300bl
 
 # make bins
 idx_bin = np.zeros((n_ch, 5, len(ids)), dtype=bool)
