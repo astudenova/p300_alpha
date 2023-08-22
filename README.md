@@ -15,7 +15,7 @@ p_source_reconstruction.py - pipeline for computation of saving ERs and alpha en
 
 plot_simulated.py - pipeline for plotting using simulated data (without statistical assessment)
 
-plots.py - pipeline for plotting fig. 2-7
+plots.py - pipeline for plotting fig. 2-6
 
 simulations_figs.py - simulates non-zero mean oscillations for fig. 1 in Introduction and fig. 8 Methods section, and in Supplementary file fig. S4
 
@@ -28,6 +28,10 @@ tools_lifedataset.py - functions for handling LIFE data
 tools_plotting.py - functions for plotting
 
 tools_signal.py - functions for signal processing and data processing
+
+additional_analysis.py - pipeline for additional analysis and plotting after the review
+
+mediation_analysis.R - script for R that performed mediation for fig. 7
 
 ----------------------------
 
